@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>C1W2L02 · 逻辑回归 | Logistic Regression</title>
+<style>
+  :root {
+    --bg: #f6f7fb;
+    --card: #ffffff;
+    --ink: #1f2430;
+    --muted: #6b7280;
+    --accent: #4f6df5;
+    --accent-soft: #eef1fe;
+    --en: #0e9f6e;
+    --en-soft: #e7f7f1;
+    --border: #e5e8f0;
+    --radius: 14px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", -apple-system, "Segoe UI", sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    line-height: 1.75;
+    padding: 32px 16px 64px;
+  }
+  .wrap { max-width: 860px; margin: 0 auto; }
+
+  header.hero {
+    background: linear-gradient(135deg, #4f6df5 0%, #7c5cf0 100%);
+    color: #fff;
+    border-radius: var(--radius);
+    padding: 36px 32px;
+    margin-bottom: 28px;
+  }
+  .hero .course { font-size: 13px; opacity: .85; letter-spacing: .5px; margin-bottom: 8px; }
+  .hero h1 { font-size: 28px; line-height: 1.35; }
+  .hero .en-title { font-size: 17px; font-weight: 400; opacity: .9; margin-top: 6px; }
+  .hero a { color: #dbe3ff; font-size: 13px; }
+
+  h2.section {
+    font-size: 20px;
+    margin: 36px 0 16px;
+    padding-left: 12px;
+    border-left: 4px solid var(--accent);
+  }
+  h2.section .en { color: var(--muted); font-weight: 500; font-size: 15px; margin-left: 8px; }
+
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 22px 24px;
+    margin-bottom: 16px;
+    box-shadow: 0 1px 3px rgba(30, 40, 90, .05);
+  }
+  .card h3 { font-size: 16.5px; margin-bottom: 10px; }
+  .card h3 .num {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 26px; height: 26px; border-radius: 50%;
+    background: var(--accent-soft); color: var(--accent);
+    font-size: 14px; margin-right: 10px; vertical-align: middle;
+  }
+  .card p, .card li { font-size: 15px; }
+  .card ul { padding-left: 22px; margin: 8px 0; }
+  .en-block {
+    margin-top: 10px;
+    padding: 10px 14px;
+    background: var(--en-soft);
+    border-left: 3px solid var(--en);
+    border-radius: 6px;
+    color: #14532d;
+    font-size: 14px;
+    font-family: Georgia, "Times New Roman", serif;
+  }
+  mark { background: #fff3c4; padding: 0 4px; border-radius: 4px; }
+  .formula {
+    font-family: "SF Mono", Consolas, monospace;
+    background: #f1f3f9;
+    padding: 1px 7px;
+    border-radius: 5px;
+    font-size: 14px;
+  }
+  .big-formula {
+    font-family: "SF Mono", Consolas, monospace;
+    background: #f1f3f9;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 16px;
+    margin: 10px 0;
+    font-size: 15.5px;
+    text-align: center;
+  }
+  .chart-caption { font-size: 12.5px; color: var(--muted); text-align: center; margin-top: 4px; }
+  .bad { color: #c0392b; font-weight: 600; }
+  .good { color: #0e9f6e; font-weight: 600; }
+
+  /* Glossary flashcards */
+  .controls { display: flex; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; }
+  .controls button {
+    border: 1px solid var(--border);
+    background: var(--card);
+    padding: 7px 16px;
+    border-radius: 999px;
+    font-size: 13.5px;
+    cursor: pointer;
+    color: var(--ink);
+    transition: all .15s;
+  }
+  .controls button:hover { border-color: var(--accent); color: var(--accent); }
+  .controls button.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+  .glossary { display: grid; grid-template-columns: repeat(auto-fill, minmax(255px, 1fr)); gap: 12px; }
+  .term {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px 18px;
+    cursor: pointer;
+    transition: transform .12s, box-shadow .12s;
+    user-select: none;
+  }
+  .term:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(30,40,90,.08); }
+  .term .word { font-weight: 700; font-size: 15px; color: var(--accent); }
+  .term .zh { font-size: 14px; margin-top: 2px; }
+  .term .def {
+    font-size: 13.5px; color: var(--muted); margin-top: 8px;
+    border-top: 1px dashed var(--border); padding-top: 8px;
+  }
+  .quiz-mode .term .def, .quiz-mode .term .zh { display: none; }
+  .quiz-mode .term.revealed .def, .quiz-mode .term.revealed .zh { display: block; }
+  .quiz-hint { font-size: 13px; color: var(--muted); margin-bottom: 12px; display: none; }
+  .quiz-mode-on .quiz-hint { display: block; }
+
+  footer { text-align: center; color: var(--muted); font-size: 12.5px; margin-top: 48px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="hero">
+    <div class="course">Andrew Ng · 深度学习专项课程 · Course 1 Week 2 Lesson 2</div>
+    <h1>逻辑回归</h1>
+    <div class="en-title">Logistic Regression (C1W2L02)</div>
+    <div style="margin-top:10px"><a href="https://www.youtube.com/watch?v=hjrYrynGWGA" target="_blank">▶ 观看视频 Watch on YouTube</a></div>
+  </header>
+
+  <h2 class="section">核心知识点 <span class="en">Key Points</span></h2>
+
+  <div class="card">
+    <h3><span class="num">1</span>目标:输出一个概率 · The Goal</h3>
+    <p>给定输入 x(如图片的特征向量),输出预测值:</p>
+    <div class="big-formula">ŷ = P(y = 1 | x)</div>
+    <p>即"给定 x,y = 1(是猫)的<mark>概率</mark>"。因为是概率,必须满足 <span class="formula">0 ≤ ŷ ≤ 1</span>。</p>
+    <div class="en-block">Given x, we want ŷ = P(y = 1 | x) — the probability that y equals 1. A probability must lie between 0 and 1.</div>
+  </div>
+
+  <div class="card">
+    <h3><span class="num">2</span>参数 w 和 b · Parameters</h3>
+    <ul>
+      <li><span class="formula">w ∈ ℝ<sup>n_x</sup></span>:<b>权重向量 (weights)</b>,维度与 x 相同</li>
+      <li><span class="formula">b ∈ ℝ</span>:<b>偏置 (bias)</b>,一个实数</li>
+    </ul>
+    <div class="en-block">The parameters of logistic regression: w, an n<sub>x</sub>-dimensional weight vector, and b, a real number (the bias).</div>
+  </div>
+
+  <div class="card">
+    <h3><span class="num">3</span>为什么不能直接用线性输出 · Why Not wᵀx + b Alone</h3>
+    <p>直接让 <span class="formula">ŷ = wᵀx + b</span>(线性回归)不行:</p>
+    <ul>
+      <li>结果可能 <span class="bad">大于 1</span>,也可能是 <span class="bad">负数</span> —— 不是合法的概率 ✗</li>
+    </ul>
+    <div class="en-block">The linear output wᵀx + b can be much bigger than 1 or even negative, which makes no sense for a probability.</div>
+  </div>
+
+  <div class="card">
+    <h3><span class="num">4</span>解决:套上 Sigmoid · The Sigmoid Solution</h3>
+    <p>记线性部分为 <span class="formula">z = wᵀx + b</span>,再套 sigmoid:</p>
+    <div class="big-formula">ŷ = σ(z) = 1 / (1 + e<sup>−z</sup>)</div>
+    <svg viewBox="0 0 560 240" width="100%" xmlns="http://www.w3.org/2000/svg">
+      <!-- axes -->
+      <line x1="40" y1="200" x2="530" y2="200" stroke="#9aa3b5" stroke-width="2"/>
+      <line x1="285" y1="220" x2="285" y2="20" stroke="#9aa3b5" stroke-width="1.5"/>
+      <text x="540" y="204" font-size="12" fill="#6b7280">z</text>
+      <!-- guide lines -->
+      <line x1="40" y1="40" x2="530" y2="40" stroke="#e5e8f0" stroke-width="1.5" stroke-dasharray="4 4"/>
+      <text x="44" y="34" font-size="11" fill="#9aa3b5">σ(z) = 1</text>
+      <line x1="40" y1="120" x2="530" y2="120" stroke="#e5e8f0" stroke-width="1.5" stroke-dasharray="4 4"/>
+      <text x="44" y="114" font-size="11" fill="#9aa3b5">0.5</text>
+      <!-- sigmoid curve: sigma(z), x from 40..530 mapping z=-6..6, y = 200 - 160*sigma -->
+      <path d="M 40 199.4 C 120 198, 180 192, 230 168 C 260 150, 270 135, 285 120 C 300 105, 310 90, 340 72 C 390 48, 450 42, 530 40.6"
+            fill="none" stroke="#4f6df5" stroke-width="3"/>
+      <!-- point at 0,0.5 -->
+      <circle cx="285" cy="120" r="5" fill="#e0523e"/>
+      <text x="295" y="138" font-size="12" fill="#e0523e">σ(0) = 0.5</text>
+      <!-- annotations -->
+      <text x="430" y="70" font-size="12" fill="#0e7a55">z 很大 → σ(z) ≈ 1</text>
+      <text x="60" y="180" font-size="12" fill="#c2620e">z 很小(大负数)→ σ(z) ≈ 0</text>
+    </svg>
+    <div class="chart-caption">Sigmoid 把任意实数平滑压缩到 (0, 1) 之间,输出永远是合法概率</div>
+    <div class="en-block">If z is large, e<sup>−z</sup> ≈ 0 so σ(z) ≈ 1. If z is a large negative number, σ(z) ≈ 0. And σ(0) = 0.5. The output is always a valid probability.</div>
+  </div>
+
+  <div class="card">
+    <h3><span class="num">5</span>符号约定:w 和 b 分开 · Keep w and b Separate</h3>
+    <p>有些课程定义 x₀ = 1,把 b 并入一个参数向量 θ(θ₀ 就是 b)。<b>本课程不用这种写法</b>:w 和 b <mark>分开处理</mark>,实现神经网络时更简单。</p>
+    <div class="en-block">Some courses merge b into a parameter vector θ (with x₀ = 1). This course keeps w and b separate — it makes implementing neural networks easier.</div>
+  </div>
+
+  <div class="card">
+    <h3><span class="num">6</span>学习 = 找到好的 w 和 b · What Learning Means</h3>
+    <p>训练逻辑回归,就是<mark>学习参数 w 和 b</mark>,让 ŷ 成为对 P(y = 1 | x) 的好估计。怎么衡量"好不好"?需要定义<b>损失函数 (cost function)</b> —— 下一讲内容。</p>
+    <div class="en-block">Training means learning w and b so that ŷ becomes a good estimate of P(y = 1 | x). To do that, we need a cost function — next lecture.</div>
+  </div>
+
+  <h2 class="section">名词卡片 <span class="en">Glossary · 点击「自测模式」可当抽认卡用</span></h2>
+
+  <div class="controls">
+    <button id="btnStudy" class="active" onclick="setMode(false)">📖 学习模式</button>
+    <button id="btnQuiz" onclick="setMode(true)">🎯 自测模式</button>
+  </div>
+  <p class="quiz-hint">自测模式:先回忆中文含义,再点击卡片查看答案。</p>
+
+  <div class="glossary" id="glossary">
+    <div class="term"><div class="word">Logistic Regression</div><div class="zh">逻辑回归</div><div class="def">输出 0~1 概率的二分类算法,神经网络的基础单元</div></div>
+    <div class="term"><div class="word">ŷ (y-hat)</div><div class="zh">预测值</div><div class="def">模型输出:对 P(y=1|x) 的估计</div></div>
+    <div class="term"><div class="word">P(y = 1 | x)</div><div class="zh">条件概率</div><div class="def">给定输入 x 时 y=1 的概率</div></div>
+    <div class="term"><div class="word">w (weights)</div><div class="zh">权重向量</div><div class="def">与 x 同维度的参数,决定每个特征的影响力</div></div>
+    <div class="term"><div class="word">b (bias)</div><div class="zh">偏置 / 截距</div><div class="def">一个实数参数,平移决策边界</div></div>
+    <div class="term"><div class="word">z</div><div class="zh">线性输出</div><div class="def">z = wᵀx + b,套 sigmoid 之前的值</div></div>
+    <div class="term"><div class="word">wᵀx</div><div class="zh">向量内积</div><div class="def">w 转置乘 x:各特征加权求和</div></div>
+    <div class="term"><div class="word">Sigmoid Function σ(z)</div><div class="zh">Sigmoid 函数</div><div class="def">1/(1+e^(−z));把任意实数压缩到 (0,1)</div></div>
+    <div class="term"><div class="word">Linear Regression</div><div class="zh">线性回归</div><div class="def">直接输出 wᵀx + b;不适合二分类,输出可能越界</div></div>
+    <div class="term"><div class="word">Parameters</div><div class="zh">参数</div><div class="def">模型中通过训练学习的量(这里是 w 和 b)</div></div>
+    <div class="term"><div class="word">θ (theta) Notation</div><div class="zh">θ 记号</div><div class="def">其他课程把 b 并入参数向量的写法;本课程不采用</div></div>
+  </div>
+
+  <footer>C1W2L02 复习笔记 · 中英双语版</footer>
+</div>
+
+<script>
+  const glossary = document.getElementById('glossary');
+  const body = document.body;
+  function setMode(quiz) {
+    glossary.classList.toggle('quiz-mode', quiz);
+    body.classList.toggle('quiz-mode-on', quiz);
+    document.getElementById('btnQuiz').classList.toggle('active', quiz);
+    document.getElementById('btnStudy').classList.toggle('active', !quiz);
+    document.querySelectorAll('.term').forEach(t => t.classList.remove('revealed'));
+  }
+  document.querySelectorAll('.term').forEach(t => {
+    t.addEventListener('click', () => {
+      if (glossary.classList.contains('quiz-mode')) t.classList.toggle('revealed');
+    });
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>C1W2L01 · 二分类 | Binary Classification</title>
+<style>
+  :root {
+    --bg: #f6f7fb;
+    --card: #ffffff;
+    --ink: #1f2430;
+    --muted: #6b7280;
+    --accent: #4f6df5;
+    --accent-soft: #eef1fe;
+    --en: #0e9f6e;
+    --en-soft: #e7f7f1;
+    --border: #e5e8f0;
+    --radius: 14px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", -apple-system, "Segoe UI", sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    line-height: 1.75;
+    padding: 32px 16px 64px;
+  }
+  .wrap { max-width: 860px; margin: 0 auto; }
+
+  header.hero {
+    background: linear-gradient(135deg, #4f6df5 0%, #7c5cf0 100%);
+    color: #fff;
+    border-radius: var(--radius);
+    padding: 36px 32px;
+    margin-bottom: 28px;
+  }
+  .hero .course { font-size: 13px; opacity: .85; letter-spacing: .5px; margin-bottom: 8px; }
+  .hero h1 { font-size: 28px; line-height: 1.35; }
+  .hero .en-title { font-size: 17px; font-weight: 400; opacity: .9; margin-top: 6px; }
+  .hero a { color: #dbe3ff; font-size: 13px; }
+  .hero .note {
+    margin-top: 12px; font-size: 13px; background: rgba(255,255,255,.15);
+    padding: 6px 14px; border-radius: 8px; display: inline-block;
+  }
+
+  h2.section {
+    font-size: 20px;
+    margin: 36px 0 16px;
+    padding-left: 12px;
+    border-left: 4px solid var(--accent);
+  }
+  h2.section .en { color: var(--muted); font-weight: 500; font-size: 15px; margin-left: 8px; }
+
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 22px 24px;
+    margin-bottom: 16px;
+    box-shadow: 0 1px 3px rgba(30, 40, 90, .05);
+  }
+  .card h3 { font-size: 16.5px; margin-bottom: 10px; }
+  .card h3 .num {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 26px; height: 26px; border-radius: 50%;
+    background: var(--accent-soft); color: var(--accent);
+    font-size: 14px; margin-right: 10px; vertical-align: middle;
+  }
+  .card p, .card li { font-size: 15px; }
+  .card ul { padding-left: 22px; margin: 8px 0; }
+  .en-block {
+    margin-top: 10px;
+    padding: 10px 14px;
+    background: var(--en-soft);
+    border-left: 3px solid var(--en);
+    border-radius: 6px;
+    color: #14532d;
+    font-size: 14px;
+    font-family: Georgia, "Times New Roman", serif;
+  }
+  mark { background: #fff3c4; padding: 0 4px; border-radius: 4px; }
+  .formula {
+    font-family: "SF Mono", Consolas, monospace;
+    background: #f1f3f9;
+    padding: 1px 7px;
+    border-radius: 5px;
+    font-size: 14px;
+  }
+  .big-formula {
+    font-family: "SF Mono", Consolas, monospace;
+    background: #f1f3f9;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 16px;
+    margin: 10px 0;
+    font-size: 15px;
+    text-align: center;
+  }
+  .chart-caption { font-size: 12.5px; color: var(--muted); text-align: center; margin-top: 4px; }
+
+  /* Glossary flashcards */
+  .controls { display: flex; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; }
+  .controls button {
+    border: 1px solid var(--border);
+    background: var(--card);
+    padding: 7px 16px;
+    border-radius: 999px;
+    font-size: 13.5px;
+    cursor: pointer;
+    color: var(--ink);
+    transition: all .15s;
+  }
+  .controls button:hover { border-color: var(--accent); color: var(--accent); }
+  .controls button.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+  .glossary { display: grid; grid-template-columns: repeat(auto-fill, minmax(255px, 1fr)); gap: 12px; }
+  .term {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px 18px;
+    cursor: pointer;
+    transition: transform .12s, box-shadow .12s;
+    user-select: none;
+  }
+  .term:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(30,40,90,.08); }
+  .term .word { font-weight: 700; font-size: 15px; color: var(--accent); }
+  .term .zh { font-size: 14px; margin-top: 2px; }
+  .term .def {
+    font-size: 13.5px; color: var(--muted); margin-top: 8px;
+    border-top: 1px dashed var(--border); padding-top: 8px;
+  }
+  .quiz-mode .term .def, .quiz-mode .term .zh { display: none; }
+  .quiz-mode .term.revealed .def, .quiz-mode .term.revealed .zh { display: block; }
+  .quiz-hint { font-size: 13px; color: var(--muted); margin-bottom: 12px; display: none; }
+  .quiz-mode-on .quiz-hint { display: block; }
+
+  footer { text-align: center; color: var(--muted); font-size: 12.5px; margin-top: 48px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="hero">
+    <div class="course">Andrew Ng · 深度学习专项课程 · Course 1 Week 2 Lesson 1</div>
+    <h1>二分类</h1>
+    <div class="en-title">Binary Classification (C1W2L01)</div>
+    <div style="margin-top:10px"><a href="https://www.youtube.com/watch?v=eqEc66RFY0I" target="_blank">▶ 观看视频 Watch on YouTube</a></div>
+    <div class="note">⭐ 本讲的符号约定 (notation) 贯穿整个课程,务必记牢</div>
+  </header>
+
+  <h2 class="section">核心知识点 <span class="en">Key Points</span></h2>
+
+  <div class="card">
+    <h3><span class="num">1</span>什么是二分类 · What is Binary Classification</h3>
+    <p>输出 y 只有两种取值:<span class="formula">y ∈ {0, 1}</span>。经典例子:输入一张图片,判断<mark>是猫 (1) 还是不是猫 (0)</mark>。</p>
+    <p><mark>逻辑回归 (logistic regression)</mark> 是处理二分类的经典算法,也是接下来几讲的主角。</p>
+    <div class="en-block">Binary classification: the output y is either 0 or 1 — e.g., "cat (1) vs non-cat (0)". Logistic regression is the classic algorithm for this task.</div>
+  </div>
+
+  <div class="card">
+    <h3><span class="num">2</span>图片如何变成输入向量 x · Image → Feature Vector</h3>
+    <p>彩色图片在计算机里 = <b>三个矩阵</b>(红/绿/蓝通道的像素亮度)。把所有像素值<mark>展开 (unroll)</mark> 成一个长列向量 x:</p>
+    <svg viewBox="0 0 620 190" width="100%" xmlns="http://www.w3.org/2000/svg">
+      <!-- RGB stacked matrices -->
+      <rect x="60" y="52" width="80" height="80" rx="6" fill="#4f6df5" opacity=".85"/>
+      <rect x="48" y="40" width="80" height="80" rx="6" fill="#0e9f6e" opacity=".9"/>
+      <rect x="36" y="28" width="80" height="80" rx="6" fill="#e0523e" opacity=".95"/>
+      <text x="76" y="74" font-size="13" fill="#fff" font-weight="bold">R 64×64</text>
+      <text x="88" y="127" font-size="11" fill="#3b4fc0">G · B</text>
+      <text x="88" y="165" font-size="12.5" fill="#6b7280" text-anchor="middle">3 个通道矩阵</text>
+      <!-- arrow -->
+      <line x1="165" y1="80" x2="255" y2="80" stroke="#9aa3b5" stroke-width="2"/>
+      <polygon points="255,80 245,74 245,86" fill="#9aa3b5"/>
+      <text x="210" y="66" font-size="12" fill="#6b7280" text-anchor="middle">unroll 展开</text>
+      <!-- vector x -->
+      <rect x="272" y="14" width="42" height="150" rx="6" fill="none" stroke="#4f6df5" stroke-width="2"/>
+      <text x="293" y="36" font-size="11" fill="#e0523e" text-anchor="middle">255</text>
+      <text x="293" y="54" font-size="11" fill="#e0523e" text-anchor="middle">231</text>
+      <text x="293" y="72" font-size="11" fill="#9aa3b5" text-anchor="middle">⋮</text>
+      <text x="293" y="90" font-size="11" fill="#0e9f6e" text-anchor="middle">142</text>
+      <text x="293" y="108" font-size="11" fill="#9aa3b5" text-anchor="middle">⋮</text>
+      <text x="293" y="126" font-size="11" fill="#4f6df5" text-anchor="middle">88</text>
+      <text x="293" y="144" font-size="11" fill="#9aa3b5" text-anchor="middle">⋮</text>
+      <text x="293" y="182" font-size="13" fill="#1f2430" text-anchor="middle" font-weight="bold">x</text>
+      <!-- dimension -->
+      <text x="420" y="70" font-size="14" fill="#1f2430">维度 n<tspan baseline-shift="sub" font-size="10">x</tspan> = 64 × 64 × 3</text>
+      <text x="420" y="96" font-size="15" fill="#4f6df5" font-weight="bold">= 12288</text>
+      <text x="420" y="122" font-size="12" fill="#6b7280">x ∈ ℝ<tspan baseline-shift="super" font-size="9">12288</tspan></text>
+    </svg>
+    <div class="en-block">A color image is stored as three 64×64 matrices of R, G, B pixel intensities. Unroll all values into one long feature vector x with dimension n<sub>x</sub> = 64 × 64 × 3 = 12288.</div>
+  </div>
+
+  <div class="card">
+    <h3><span class="num">3</span>单个样本的记号 · Notation for a Single Example</h3>
+    <ul>
+      <li>一个训练样本:<span class="formula">(x, y)</span>,其中 x ∈ ℝ<sup>n_x</sup>,y ∈ {0, 1}</li>
+      <li>m 个训练样本:<span class="formula">{(x⁽¹⁾, y⁽¹⁾), …, (x⁽ᵐ⁾, y⁽ᵐ⁾)}</span></li>
+      <li>上标 <mark>(i) 表示第 i 个样本</mark></li>
+      <li>需要区分时:<span class="formula">m_train</span> 训练集大小、<span class="formula">m_test</span> 测试集大小</li>
+    </ul>
+    <div class="en-block">A single example is (x, y); superscript (i) refers to the i-th training example; m (or m_train) is the number of training examples.</div>
+  </div>
+
+  <div class="card">
+    <h3><span class="num">4</span>矩阵 X:样本按「列」堆叠 · Stack Examples as Columns</h3>
+    <p>把每个样本 x⁽ⁱ⁾ 作为矩阵 X 的<mark>一列</mark>:</p>
+    <div class="big-formula">X = [ x⁽¹⁾ | x⁽²⁾ | … | x⁽ᵐ⁾ ]&nbsp;&nbsp;&nbsp;X.shape = (n<sub>x</sub>, m)</div>
+    <p>⚠️ 有些课程把样本按"行"堆叠,但本课程用<b>列堆叠</b>——这样<mark>实现神经网络时代码更简单</mark>。</p>
+    <div class="en-block">Stack each x⁽ⁱ⁾ as a column of X, so X has shape (n<sub>x</sub>, m). This column convention makes neural network implementation much easier than the row convention.</div>
+  </div>
+
+  <div class="card">
+    <h3><span class="num">5</span>标签矩阵 Y · The Label Matrix Y</h3>
+    <p>标签同样按列堆叠:</p>
+    <div class="big-formula">Y = [ y⁽¹⁾, y⁽²⁾, …, y⁽ᵐ⁾ ]&nbsp;&nbsp;&nbsp;Y.shape = (1, m)</div>
+    <div class="en-block">Stack the labels as columns too: Y has shape (1, m). In Python: Y.shape == (1, m).</div>
+  </div>
+
+  <h2 class="section">名词卡片 <span class="en">Glossary · 点击「自测模式」可当抽认卡用</span></h2>
+
+  <div class="controls">
+    <button id="btnStudy" class="active" onclick="setMode(false)">📖 学习模式</button>
+    <button id="btnQuiz" onclick="setMode(true)">🎯 自测模式</button>
+  </div>
+  <p class="quiz-hint">自测模式:先回忆中文含义,再点击卡片查看答案。</p>
+
+  <div class="glossary" id="glossary">
+    <div class="term"><div class="word">Binary Classification</div><div class="zh">二分类</div><div class="def">输出只有 0/1 两种取值的分类问题(如:是不是猫)</div></div>
+    <div class="term"><div class="word">Logistic Regression</div><div class="zh">逻辑回归</div><div class="def">处理二分类的经典算法(下一讲主角)</div></div>
+    <div class="term"><div class="word">Label (y)</div><div class="zh">标签</div><div class="def">样本的正确答案,如 1=猫、0=非猫</div></div>
+    <div class="term"><div class="word">Feature Vector (x)</div><div class="zh">特征向量</div><div class="def">把输入(如图片像素)展开成的长向量</div></div>
+    <div class="term"><div class="word">n_x</div><div class="zh">输入特征维度</div><div class="def">特征向量 x 的长度,如 64×64×3 = 12288</div></div>
+    <div class="term"><div class="word">Unroll / Reshape</div><div class="zh">展开 / 重塑</div><div class="def">把矩阵中所有值拉平成一个向量的操作</div></div>
+    <div class="term"><div class="word">RGB Channels</div><div class="zh">RGB 通道</div><div class="def">彩色图片的红、绿、蓝三个像素亮度矩阵</div></div>
+    <div class="term"><div class="word">(x⁽ⁱ⁾, y⁽ⁱ⁾)</div><div class="zh">第 i 个训练样本</div><div class="def">上标 (i) 表示第 i 个样本</div></div>
+    <div class="term"><div class="word">m / m_train / m_test</div><div class="zh">样本数</div><div class="def">训练集 / 测试集的样本数量</div></div>
+    <div class="term"><div class="word">Matrix X</div><div class="zh">输入矩阵</div><div class="def">样本按列堆叠,形状 (n_x, m)</div></div>
+    <div class="term"><div class="word">Matrix Y</div><div class="zh">标签矩阵</div><div class="def">标签按列堆叠,形状 (1, m)</div></div>
+    <div class="term"><div class="word">X.shape</div><div class="zh">矩阵形状</div><div class="def">NumPy 中查看矩阵维度的属性,X.shape == (n_x, m)</div></div>
+  </div>
+
+  <footer>C1W2L01 复习笔记 · 中英双语版</footer>
+</div>
+
+<script>
+  const glossary = document.getElementById('glossary');
+  const body = document.body;
+  function setMode(quiz) {
+    glossary.classList.toggle('quiz-mode', quiz);
+    body.classList.toggle('quiz-mode-on', quiz);
+    document.getElementById('btnQuiz').classList.toggle('active', quiz);
+    document.getElementById('btnStudy').classList.toggle('active', !quiz);
+    document.querySelectorAll('.term').forEach(t => t.classList.remove('revealed'));
+  }
+  document.querySelectorAll('.term').forEach(t => {
+    t.addEventListener('click', () => {
+      if (glossary.classList.contains('quiz-mode')) t.classList.toggle('revealed');
+    });
+  });
+</script>
+</body>
+</html>

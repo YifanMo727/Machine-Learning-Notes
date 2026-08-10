@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>C1W2L10 · m 个样本的梯度下降 | Gradient Descent on m Examples</title>
+<style>
+  :root {
+    --bg: #f6f7fb; --card: #ffffff; --ink: #1f2430; --muted: #6b7280;
+    --accent: #4f6df5; --accent-soft: #eef1fe;
+    --en: #0e9f6e; --en-soft: #e7f7f1;
+    --border: #e5e8f0; --radius: 14px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", -apple-system, "Segoe UI", sans-serif;
+    background: var(--bg); color: var(--ink); line-height: 1.75; padding: 32px 16px 64px;
+  }
+  .wrap { max-width: 860px; margin: 0 auto; }
+  header.hero {
+    background: linear-gradient(135deg, #4f6df5 0%, #7c5cf0 100%);
+    color: #fff; border-radius: var(--radius); padding: 36px 32px; margin-bottom: 28px;
+  }
+  .hero .course { font-size: 13px; opacity: .85; letter-spacing: .5px; margin-bottom: 8px; }
+  .hero h1 { font-size: 28px; line-height: 1.35; }
+  .hero .en-title { font-size: 17px; font-weight: 400; opacity: .9; margin-top: 6px; }
+  .hero a { color: #dbe3ff; font-size: 13px; }
+  h2.section { font-size: 20px; margin: 36px 0 16px; padding-left: 12px; border-left: 4px solid var(--accent); }
+  h2.section .en { color: var(--muted); font-weight: 500; font-size: 15px; margin-left: 8px; }
+  .card {
+    background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 22px 24px; margin-bottom: 16px; box-shadow: 0 1px 3px rgba(30, 40, 90, .05);
+  }
+  .card h3 { font-size: 16.5px; margin-bottom: 10px; }
+  .card h3 .num {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 26px; height: 26px; border-radius: 50%;
+    background: var(--accent-soft); color: var(--accent);
+    font-size: 14px; margin-right: 10px; vertical-align: middle;
+  }
+  .card p, .card li { font-size: 15px; }
+  .card ul, .card ol { padding-left: 22px; margin: 8px 0; }
+  .en-block {
+    margin-top: 10px; padding: 10px 14px; background: var(--en-soft);
+    border-left: 3px solid var(--en); border-radius: 6px; color: #14532d;
+    font-size: 14px; font-family: Georgia, "Times New Roman", serif;
+  }
+  mark { background: #fff3c4; padding: 0 4px; border-radius: 4px; }
+  .formula { font-family: "SF Mono", Consolas, monospace; background: #f1f3f9; padding: 1px 7px; border-radius: 5px; font-size: 14px; }
+  .big-formula {
+    font-family: "SF Mono", Consolas, monospace; background: #f1f3f9;
+    border: 1px solid var(--border); border-radius: 8px;
+    padding: 10px 16px; margin: 10px 0; font-size: 15px; text-align: center; overflow-x: auto;
+  }
+  .code-block {
+    font-family: "SF Mono", Consolas, monospace; background: #1f2430; color: #e6e9f2;
+    border-radius: 10px; padding: 16px 18px; margin: 12px 0;
+    font-size: 13.5px; line-height: 1.8; overflow-x: auto; white-space: pre;
+  }
+  .code-block .c { color: #8a93a8; }
+  .code-block .k { color: #7cc4ff; }
+  .code-block .hl { color: #ffd75e; font-weight: 700; }
+  .controls { display: flex; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; }
+  .controls button {
+    border: 1px solid var(--border); background: var(--card); padding: 7px 16px;
+    border-radius: 999px; font-size: 13.5px; cursor: pointer; color: var(--ink); transition: all .15s;
+  }
+  .controls button:hover { border-color: var(--accent); color: var(--accent); }
+  .controls button.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .glossary { display: grid; grid-template-columns: repeat(auto-fill, minmax(255px, 1fr)); gap: 12px; }
+  .term {
+    background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+    padding: 16px 18px; cursor: pointer; transition: transform .12s, box-shadow .12s; user-select: none;
+  }
+  .term:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(30,40,90,.08); }
+  .term .word { font-weight: 700; font-size: 15px; color: var(--accent); }
+  .term .zh { font-size: 14px; margin-top: 2px; }
+  .term .def { font-size: 13.5px; color: var(--muted); margin-top: 8px; border-top: 1px dashed var(--border); padding-top: 8px; }
+  .quiz-mode .term .def, .quiz-mode .term .zh { display: none; }
+  .quiz-mode .term.revealed .def, .quiz-mode .term.revealed .zh { display: block; }
+  .quiz-hint { font-size: 13px; color: var(--muted); margin-bottom: 12px; display: none; }
+  .quiz-mode-on .quiz-hint { display: block; }
+  footer { text-align: center; color: var(--muted); font-size: 12.5px; margin-top: 48px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="hero">
+    <div class="course">Andrew Ng · 深度学习专项课程 · Course 1 Week 2 Lesson 10</div>
+    <h1>m 个样本的梯度下降</h1>
+    <div class="en-title">Gradient Descent on m Examples (C1W2L10)</div>
+    <div style="margin-top:10px"><a href="https://www.youtube.com/watch?v=KKfZLXcF-aE" target="_blank">▶ 观看视频 Watch on YouTube</a></div>
+  </header>
+
+  <h2 class="section">核心知识点 <span class="en">Key Points</span></h2>
+
+  <div class="card">
+    <h3><span class="num">1</span>从单样本到 m 个样本 · From One Example to m</h3>
+    <p>成本函数是所有样本损失的平均,所以<mark>总梯度 = 各样本梯度的平均</mark>:</p>
+    <div class="big-formula">J(w,b) = (1/m) Σᵢ L(a⁽ⁱ⁾, y⁽ⁱ⁾)&nbsp;&nbsp;&nbsp;dJ/dw₁ = (1/m) Σᵢ dw₁⁽ⁱ⁾</div>
+    <p>做法:对每个样本算一遍上一讲的导数,再取平均。</p>
+    <div class="en-block">The cost is the average loss over m examples, so the overall gradient is simply the average of the per-example gradients from last lecture.</div>
+  </div>
+
+  <div class="card">
+    <h3><span class="num">2</span>完整算法(一次迭代)· One Iteration ⭐</h3>
+    <div class="code-block">J = 0; dw1 = 0; dw2 = 0; db = 0     <span class="c"># 初始化累加器 accumulators</span>
+
+<span class="k">for</span> i = 1 <span class="k">to</span> m:                      <span class="c"># 循环① 遍历样本</span>
+    z(i) = w·x(i) + b
+    a(i) = σ(z(i))
+    J   += −[y(i)·log a(i) + (1−y(i))·log(1−a(i))]
+    <span class="hl">dz(i) = a(i) − y(i)</span>
+    dw1 += x1(i)·dz(i)               <span class="c"># 循环② 特征多时也要 for</span>
+    dw2 += x2(i)·dz(i)
+    db  += dz(i)
+
+J /= m; dw1 /= m; dw2 /= m; db /= m  <span class="c"># 取平均</span>
+
+w1 := w1 − α·dw1                     <span class="c"># 一步梯度下降</span>
+w2 := w2 − α·dw2
+b  := b − α·db</div>
+    <ul>
+      <li>dw1、dw2、db 是<mark>累加器 (accumulators)</mark>,累积整个训练集的梯度</li>
+      <li>以上只是<b>一次迭代</b>,要重复多次才能收敛</li>
+    </ul>
+    <div class="en-block">One pass over all m examples accumulates the gradients, then divide by m and take one gradient descent step. Repeat many iterations until convergence.</div>
+  </div>
+
+  <div class="card">
+    <h3><span class="num">3</span>弱点:两个 for 循环 · The Weakness ⭐</h3>
+    <p>这个实现有<mark>两层显式 for 循环</mark>:外层遍历 <b>m 个样本</b>,内层遍历 <b>n 个特征</b>(这里只有 2 个特征,真实场景可能上万)。</p>
+    <p>显式 for 循环让代码<mark>非常慢</mark>——深度学习时代数据量巨大,这是致命的。</p>
+    <div class="en-block">Two explicit for loops: over the m examples and over the n features. Explicit for loops make your code slow — deadly with deep-learning-scale datasets.</div>
+  </div>
+
+  <div class="card">
+    <h3><span class="num">4</span>解决方案预告:向量化 · The Fix: Vectorization</h3>
+    <p><mark>向量化 (vectorization)</mark> 能完全去掉显式 for 循环,大幅加速。深度学习兴起前它是"锦上添花",现在是<b>必备技能</b>——下一讲开始学。</p>
+    <div class="en-block">Vectorization gets rid of explicit for loops entirely. It used to be a nice-to-have; in the deep learning era it's essential. Coming up next.</div>
+  </div>
+
+  <h2 class="section">名词卡片 <span class="en">Glossary · 点击「自测模式」可当抽认卡用</span></h2>
+
+  <div class="controls">
+    <button id="btnStudy" class="active" onclick="setMode(false)">📖 学习模式</button>
+    <button id="btnQuiz" onclick="setMode(true)">🎯 自测模式</button>
+  </div>
+  <p class="quiz-hint">自测模式:先回忆中文含义,再点击卡片查看答案。</p>
+
+  <div class="glossary" id="glossary">
+    <div class="term"><div class="word">Gradient on m Examples</div><div class="zh">m 样本梯度</div><div class="def">各样本梯度的平均值</div></div>
+    <div class="term"><div class="word">Accumulator</div><div class="zh">累加器</div><div class="def">循环中不断累加的变量(dw₁, dw₂, db)</div></div>
+    <div class="term"><div class="word">Superscript (i)</div><div class="zh">上标 (i)</div><div class="def">第 i 个样本的量,如 z⁽ⁱ⁾, a⁽ⁱ⁾, dz⁽ⁱ⁾</div></div>
+    <div class="term"><div class="word">One Iteration</div><div class="zh">一次迭代</div><div class="def">遍历全部样本 + 一次参数更新;需重复多次</div></div>
+    <div class="term"><div class="word">Explicit For Loop</div><div class="zh">显式 for 循环</div><div class="def">逐个遍历的写法;深度学习中要尽量避免</div></div>
+    <div class="term"><div class="word">n (number of features)</div><div class="zh">特征数</div><div class="def">内层循环的规模;特征多时 dw 要逐个算</div></div>
+    <div class="term"><div class="word">Vectorization</div><div class="zh">向量化</div><div class="def">用矩阵/向量运算替代 for 循环的加速技术(下一讲)</div></div>
+  </div>
+
+  <footer>C1W2L10 复习笔记 · 中英双语版</footer>
+</div>
+
+<script>
+  const glossary = document.getElementById('glossary');
+  const body = document.body;
+  function setMode(quiz) {
+    glossary.classList.toggle('quiz-mode', quiz);
+    body.classList.toggle('quiz-mode-on', quiz);
+    document.getElementById('btnQuiz').classList.toggle('active', quiz);
+    document.getElementById('btnStudy').classList.toggle('active', !quiz);
+    document.querySelectorAll('.term').forEach(t => t.classList.remove('revealed'));
+  }
+  document.querySelectorAll('.term').forEach(t => {
+    t.addEventListener('click', () => {
+      if (glossary.classList.contains('quiz-mode')) t.classList.toggle('revealed');
+    });
+  });
+</script>
+</body>
+</html>

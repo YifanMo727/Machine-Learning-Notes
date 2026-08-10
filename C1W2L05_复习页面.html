@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>C1W2L05 · 导数 | Derivatives</title>
+<style>
+  :root {
+    --bg: #f6f7fb; --card: #ffffff; --ink: #1f2430; --muted: #6b7280;
+    --accent: #4f6df5; --accent-soft: #eef1fe;
+    --en: #0e9f6e; --en-soft: #e7f7f1;
+    --border: #e5e8f0; --radius: 14px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", -apple-system, "Segoe UI", sans-serif;
+    background: var(--bg); color: var(--ink); line-height: 1.75; padding: 32px 16px 64px;
+  }
+  .wrap { max-width: 860px; margin: 0 auto; }
+  header.hero {
+    background: linear-gradient(135deg, #4f6df5 0%, #7c5cf0 100%);
+    color: #fff; border-radius: var(--radius); padding: 36px 32px; margin-bottom: 28px;
+  }
+  .hero .course { font-size: 13px; opacity: .85; letter-spacing: .5px; margin-bottom: 8px; }
+  .hero h1 { font-size: 28px; line-height: 1.35; }
+  .hero .en-title { font-size: 17px; font-weight: 400; opacity: .9; margin-top: 6px; }
+  .hero a { color: #dbe3ff; font-size: 13px; }
+  .hero .note { margin-top: 12px; font-size: 13px; background: rgba(255,255,255,.15); padding: 6px 14px; border-radius: 8px; display: inline-block; }
+  h2.section { font-size: 20px; margin: 36px 0 16px; padding-left: 12px; border-left: 4px solid var(--accent); }
+  h2.section .en { color: var(--muted); font-weight: 500; font-size: 15px; margin-left: 8px; }
+  .card {
+    background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 22px 24px; margin-bottom: 16px; box-shadow: 0 1px 3px rgba(30, 40, 90, .05);
+  }
+  .card h3 { font-size: 16.5px; margin-bottom: 10px; }
+  .card h3 .num {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 26px; height: 26px; border-radius: 50%;
+    background: var(--accent-soft); color: var(--accent);
+    font-size: 14px; margin-right: 10px; vertical-align: middle;
+  }
+  .card p, .card li { font-size: 15px; }
+  .card ul { padding-left: 22px; margin: 8px 0; }
+  .en-block {
+    margin-top: 10px; padding: 10px 14px; background: var(--en-soft);
+    border-left: 3px solid var(--en); border-radius: 6px; color: #14532d;
+    font-size: 14px; font-family: Georgia, "Times New Roman", serif;
+  }
+  mark { background: #fff3c4; padding: 0 4px; border-radius: 4px; }
+  .formula { font-family: "SF Mono", Consolas, monospace; background: #f1f3f9; padding: 1px 7px; border-radius: 5px; font-size: 14px; }
+  .big-formula {
+    font-family: "SF Mono", Consolas, monospace; background: #f1f3f9;
+    border: 1px solid var(--border); border-radius: 8px;
+    padding: 10px 16px; margin: 10px 0; font-size: 15.5px; text-align: center;
+  }
+  .chart-caption { font-size: 12.5px; color: var(--muted); text-align: center; margin-top: 4px; }
+  .controls { display: flex; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; }
+  .controls button {
+    border: 1px solid var(--border); background: var(--card); padding: 7px 16px;
+    border-radius: 999px; font-size: 13.5px; cursor: pointer; color: var(--ink); transition: all .15s;
+  }
+  .controls button:hover { border-color: var(--accent); color: var(--accent); }
+  .controls button.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .glossary { display: grid; grid-template-columns: repeat(auto-fill, minmax(255px, 1fr)); gap: 12px; }
+  .term {
+    background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+    padding: 16px 18px; cursor: pointer; transition: transform .12s, box-shadow .12s; user-select: none;
+  }
+  .term:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(30,40,90,.08); }
+  .term .word { font-weight: 700; font-size: 15px; color: var(--accent); }
+  .term .zh { font-size: 14px; margin-top: 2px; }
+  .term .def { font-size: 13.5px; color: var(--muted); margin-top: 8px; border-top: 1px dashed var(--border); padding-top: 8px; }
+  .quiz-mode .term .def, .quiz-mode .term .zh { display: none; }
+  .quiz-mode .term.revealed .def, .quiz-mode .term.revealed .zh { display: block; }
+  .quiz-hint { font-size: 13px; color: var(--muted); margin-bottom: 12px; display: none; }
+  .quiz-mode-on .quiz-hint { display: block; }
+  footer { text-align: center; color: var(--muted); font-size: 12.5px; margin-top: 48px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="hero">
+    <div class="course">Andrew Ng · 深度学习专项课程 · Course 1 Week 2 Lesson 5</div>
+    <h1>导数(直觉)</h1>
+    <div class="en-title">Derivatives (C1W2L05)</div>
+    <div style="margin-top:10px"><a href="https://www.youtube.com/watch?v=GzphoJOVEcE" target="_blank">▶ 观看视频 Watch on YouTube</a></div>
+    <div class="note">💡 本讲不需要微积分基础,只需要建立直觉</div>
+  </header>
+
+  <h2 class="section">核心知识点 <span class="en">Key Points</span></h2>
+
+  <div class="card">
+    <h3><span class="num">1</span>导数 = 斜率 · Derivative = Slope</h3>
+    <p><mark>导数 (derivative)</mark> 就是函数在某一点的<mark>斜率 (slope)</mark>:把变量轻推一点点,函数值变化多少。</p>
+    <div class="big-formula">斜率 slope = 高度变化 height / 宽度变化 width</div>
+    <div class="en-block">The derivative at a point is just the slope: how much f changes when you nudge the variable a tiny bit. Slope = height / width.</div>
+  </div>
+
+  <div class="card">
+    <h3><span class="num">2</span>直线例子:f(a) = 3a · Straight Line Example</h3>
+    <svg viewBox="0 0 620 260" width="100%" xmlns="http://www.w3.org/2000/svg">
+      <!-- axes -->
+      <line x1="60" y1="220" x2="580" y2="220" stroke="#9aa3b5" stroke-width="2"/>
+      <line x1="60" y1="220" x2="60" y2="20" stroke="#9aa3b5" stroke-width="2"/>
+      <text x="588" y="224" font-size="12" fill="#6b7280">a</text>
+      <text x="46" y="16" font-size="12" fill="#6b7280">f(a)</text>
+      <!-- line f=3a: a from 0..3.2 maps x 60..580? use scale: a=1 →x 210, f=3 → y decreasing -->
+      <line x1="60" y1="220" x2="540" y2="30" stroke="#4f6df5" stroke-width="3"/>
+      <text x="548" y="30" font-size="13" fill="#4f6df5" font-weight="bold">f(a) = 3a</text>
+      <!-- point a=2: x=60+2*150=360, f=6 → y=220-6*29.6? scale y: f=6→ y=220-150=70? line: at x=540 y=30 → slope consistent. Let a-scale=150px per unit? a=3.2 → x=540 →150 per unit. f-scale: y drop 190 over a=3.2 → f=9.6 → ~19.8px per f unit. a=2 → x=360, f=6 → y=220-6*19.8=101 -->
+      <circle cx="360" cy="101" r="5" fill="#e0523e"/>
+      <text x="330" y="92" font-size="12" fill="#e0523e">(2, 6)</text>
+      <!-- triangle: width small exaggerated -->
+      <line x1="360" y1="101" x2="420" y2="101" stroke="#c2620e" stroke-width="2" stroke-dasharray="4 3"/>
+      <line x1="420" y1="101" x2="420" y2="77" stroke="#0e9f6e" stroke-width="2" stroke-dasharray="4 3"/>
+      <text x="372" y="118" font-size="11.5" fill="#c2620e">宽 0.001</text>
+      <text x="428" y="93" font-size="11.5" fill="#0e7a55">高 0.003</text>
+      <text x="452" y="120" font-size="12.5" fill="#1f2430">斜率 = 0.003/0.001 = <tspan font-weight="bold" fill="#4f6df5">3</tspan></text>
+    </svg>
+    <div class="chart-caption">把 a 从 2 轻推到 2.001,f 从 6 变到 6.003 —— f 的变化是 a 的 3 倍</div>
+    <div class="big-formula">df(a)/da = 3&nbsp;&nbsp;&nbsp;(也写作 d/da f(a) = 3)</div>
+    <div class="en-block">Nudge a from 2 to 2.001: f(a) goes from 6 to 6.003. f moved up 3× as much as a, so the slope df/da = 3.</div>
+  </div>
+
+  <div class="card">
+    <h3><span class="num">3</span>严格定义:无穷小的推动 · Infinitesimal Nudge</h3>
+    <p>0.001 只是方便理解;导数的严格定义是把 a 推动一个<mark>无穷小 (infinitesimally small)</mark> 的量,看 f 变化多少倍。直觉完全一样。</p>
+    <div class="en-block">The formal definition uses an infinitesimally tiny nudge rather than 0.001, but the intuition is exactly the same.</div>
+  </div>
+
+  <div class="card">
+    <h3><span class="num">4</span>直线的斜率处处相同 · Same Slope Everywhere</h3>
+    <p>对 f(a) = 3a:无论在 a = 2 还是 a = 5,斜率都是 3——<mark>直线的导数是常数</mark>。下一讲会看到:<b>曲线</b>在不同点的斜率是<b>不同的</b>。</p>
+    <div class="en-block">For a straight line, the slope is 3 everywhere. Next lecture: for curves, the slope is different at different points.</div>
+  </div>
+
+  <h2 class="section">名词卡片 <span class="en">Glossary · 点击「自测模式」可当抽认卡用</span></h2>
+
+  <div class="controls">
+    <button id="btnStudy" class="active" onclick="setMode(false)">📖 学习模式</button>
+    <button id="btnQuiz" onclick="setMode(true)">🎯 自测模式</button>
+  </div>
+  <p class="quiz-hint">自测模式:先回忆中文含义,再点击卡片查看答案。</p>
+
+  <div class="glossary" id="glossary">
+    <div class="term"><div class="word">Derivative</div><div class="zh">导数</div><div class="def">函数在某点的斜率;轻推变量时函数值的变化倍率</div></div>
+    <div class="term"><div class="word">Slope</div><div class="zh">斜率</div><div class="def">高度变化 ÷ 宽度变化</div></div>
+    <div class="term"><div class="word">Nudge</div><div class="zh">轻推</div><div class="def">把变量增加一个很小的量(如 0.001)</div></div>
+    <div class="term"><div class="word">Infinitesimal</div><div class="zh">无穷小</div><div class="def">导数严格定义中"无限小"的推动量</div></div>
+    <div class="term"><div class="word">df(a)/da</div><div class="zh">导数记号</div><div class="def">"f 对 a 的导数",也写作 d/da f(a)</div></div>
+    <div class="term"><div class="word">Constant Slope</div><div class="zh">常数斜率</div><div class="def">直线的特点:处处斜率相同</div></div>
+  </div>
+
+  <footer>C1W2L05 复习笔记 · 中英双语版</footer>
+</div>
+
+<script>
+  const glossary = document.getElementById('glossary');
+  const body = document.body;
+  function setMode(quiz) {
+    glossary.classList.toggle('quiz-mode', quiz);
+    body.classList.toggle('quiz-mode-on', quiz);
+    document.getElementById('btnQuiz').classList.toggle('active', quiz);
+    document.getElementById('btnStudy').classList.toggle('active', !quiz);
+    document.querySelectorAll('.term').forEach(t => t.classList.remove('revealed'));
+  }
+  document.querySelectorAll('.term').forEach(t => {
+    t.addEventListener('click', () => {
+      if (glossary.classList.contains('quiz-mode')) t.classList.toggle('revealed');
+    });
+  });
+</script>
+</body>
+</html>

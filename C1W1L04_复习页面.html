@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>C1W1L04 · 为什么深度学习会兴起? | Why is Deep Learning Taking Off?</title>
+<style>
+  :root {
+    --bg: #f6f7fb;
+    --card: #ffffff;
+    --ink: #1f2430;
+    --muted: #6b7280;
+    --accent: #4f6df5;
+    --accent-soft: #eef1fe;
+    --en: #0e9f6e;
+    --en-soft: #e7f7f1;
+    --border: #e5e8f0;
+    --radius: 14px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", -apple-system, "Segoe UI", sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    line-height: 1.75;
+    padding: 32px 16px 64px;
+  }
+  .wrap { max-width: 860px; margin: 0 auto; }
+
+  header.hero {
+    background: linear-gradient(135deg, #4f6df5 0%, #7c5cf0 100%);
+    color: #fff;
+    border-radius: var(--radius);
+    padding: 36px 32px;
+    margin-bottom: 28px;
+  }
+  .hero .course { font-size: 13px; opacity: .85; letter-spacing: .5px; margin-bottom: 8px; }
+  .hero h1 { font-size: 28px; line-height: 1.35; }
+  .hero .en-title { font-size: 17px; font-weight: 400; opacity: .9; margin-top: 6px; }
+  .hero a { color: #dbe3ff; font-size: 13px; }
+
+  h2.section {
+    font-size: 20px;
+    margin: 36px 0 16px;
+    padding-left: 12px;
+    border-left: 4px solid var(--accent);
+  }
+  h2.section .en { color: var(--muted); font-weight: 500; font-size: 15px; margin-left: 8px; }
+
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 22px 24px;
+    margin-bottom: 16px;
+    box-shadow: 0 1px 3px rgba(30, 40, 90, .05);
+  }
+  .card h3 { font-size: 16.5px; margin-bottom: 10px; }
+  .card h3 .num {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 26px; height: 26px; border-radius: 50%;
+    background: var(--accent-soft); color: var(--accent);
+    font-size: 14px; margin-right: 10px; vertical-align: middle;
+  }
+  .card p, .card li { font-size: 15px; }
+  .card ul, .card ol { padding-left: 22px; margin: 8px 0; }
+  .en-block {
+    margin-top: 10px;
+    padding: 10px 14px;
+    background: var(--en-soft);
+    border-left: 3px solid var(--en);
+    border-radius: 6px;
+    color: #14532d;
+    font-size: 14px;
+    font-family: Georgia, "Times New Roman", serif;
+  }
+  mark { background: #fff3c4; padding: 0 4px; border-radius: 4px; }
+  .formula {
+    font-family: "SF Mono", Consolas, monospace;
+    background: #f1f3f9;
+    padding: 1px 7px;
+    border-radius: 5px;
+    font-size: 14px;
+  }
+
+  /* scale chart */
+  .chart-box { margin: 12px 0 4px; }
+  .chart-caption { font-size: 12.5px; color: var(--muted); text-align: center; margin-top: 4px; }
+
+  /* three drivers */
+  .drivers { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 10px; }
+  .drivers .d {
+    border: 1px solid var(--border); border-radius: 10px;
+    padding: 14px 14px; text-align: center;
+  }
+  .drivers .d .icon { font-size: 26px; }
+  .drivers .d h4 { font-size: 14.5px; margin: 6px 0 4px; }
+  .drivers .d p { font-size: 13px; color: var(--muted); line-height: 1.55; }
+  .drivers .d1 { background: #f2f5ff; }
+  .drivers .d2 { background: #fff8ee; }
+  .drivers .d3 { background: #f0fbf5; }
+  @media (max-width: 620px) { .drivers { grid-template-columns: 1fr; } }
+
+  /* cycle */
+  .cycle { display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap; margin: 12px 0 4px; font-size: 14px; }
+  .cycle .step { background: var(--accent-soft); color: #3b4fc0; padding: 6px 16px; border-radius: 999px; font-weight: 600; }
+  .cycle .arr { color: var(--muted); }
+  .cycle .loop { color: var(--muted); font-size: 12.5px; width: 100%; text-align: center; }
+
+  /* Glossary flashcards */
+  .controls { display: flex; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; }
+  .controls button {
+    border: 1px solid var(--border);
+    background: var(--card);
+    padding: 7px 16px;
+    border-radius: 999px;
+    font-size: 13.5px;
+    cursor: pointer;
+    color: var(--ink);
+    transition: all .15s;
+  }
+  .controls button:hover { border-color: var(--accent); color: var(--accent); }
+  .controls button.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+  .glossary { display: grid; grid-template-columns: repeat(auto-fill, minmax(255px, 1fr)); gap: 12px; }
+  .term {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px 18px;
+    cursor: pointer;
+    transition: transform .12s, box-shadow .12s;
+    user-select: none;
+  }
+  .term:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(30,40,90,.08); }
+  .term .word { font-weight: 700; font-size: 15px; color: var(--accent); }
+  .term .zh { font-size: 14px; margin-top: 2px; }
+  .term .def {
+    font-size: 13.5px; color: var(--muted); margin-top: 8px;
+    border-top: 1px dashed var(--border); padding-top: 8px;
+  }
+  .quiz-mode .term .def, .quiz-mode .term .zh { display: none; }
+  .quiz-mode .term.revealed .def, .quiz-mode .term.revealed .zh { display: block; }
+  .quiz-hint { font-size: 13px; color: var(--muted); margin-bottom: 12px; display: none; }
+  .quiz-mode-on .quiz-hint { display: block; }
+
+  footer { text-align: center; color: var(--muted); font-size: 12.5px; margin-top: 48px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="hero">
+    <div class="course">Andrew Ng · 深度学习专项课程 · Course 1 Week 1 Lesson 4</div>
+    <h1>为什么深度学习会兴起?</h1>
+    <div class="en-title">Why is Deep Learning Taking Off? (C1W1L04)</div>
+    <div style="margin-top:10px"><a href="https://www.youtube.com/watch?v=xflCLdJh0n0" target="_blank">▶ 观看视频 Watch on YouTube</a></div>
+  </header>
+
+  <h2 class="section">核心知识点 <span class="en">Key Points</span></h2>
+
+  <div class="card">
+    <h3><span class="num">1</span>规模驱动进步 · Scale Drives Deep Learning Progress</h3>
+    <p>深度学习的思想几十年前就有,近年才爆发的核心原因是<mark>规模 (scale)</mark>——数据规模 + 网络规模。这节课最重要的一张图:</p>
+    <div class="chart-box">
+      <svg viewBox="0 0 560 300" width="100%" xmlns="http://www.w3.org/2000/svg">
+        <line x1="60" y1="250" x2="530" y2="250" stroke="#9aa3b5" stroke-width="2"/>
+        <line x1="60" y1="250" x2="60" y2="30" stroke="#9aa3b5" stroke-width="2"/>
+        <text x="295" y="285" text-anchor="middle" font-size="13" fill="#6b7280">数据量 Amount of data (m) →</text>
+        <text x="28" y="140" text-anchor="middle" font-size="13" fill="#6b7280" transform="rotate(-90 28 140)">性能 Performance →</text>
+        <path d="M 60 245 C 140 200, 200 190, 520 185" fill="none" stroke="#c2620e" stroke-width="2.5" stroke-dasharray="6 4"/>
+        <text x="524" y="188" font-size="11.5" fill="#c2620e">传统算法 (SVM 等)</text>
+        <path d="M 60 245 C 150 185, 240 160, 520 148" fill="none" stroke="#8b3fc9" stroke-width="2.5"/>
+        <text x="524" y="150" font-size="11.5" fill="#8b3fc9">小型 NN</text>
+        <path d="M 60 245 C 160 165, 260 120, 520 100" fill="none" stroke="#0e9f6e" stroke-width="2.5"/>
+        <text x="524" y="102" font-size="11.5" fill="#0e9f6e">中型 NN</text>
+        <path d="M 60 245 C 170 150, 280 85, 520 50" fill="none" stroke="#4f6df5" stroke-width="3"/>
+        <text x="524" y="52" font-size="11.5" fill="#4f6df5" font-weight="bold">大型 NN</text>
+        <line x1="180" y1="250" x2="180" y2="60" stroke="#e5e8f0" stroke-width="1.5" stroke-dasharray="3 4"/>
+        <text x="120" y="46" font-size="11" fill="#9aa3b5">小数据区:排序不确定,</text>
+        <text x="120" y="60" font-size="11" fill="#9aa3b5">手工特征可能更好</text>
+      </svg>
+      <div class="chart-caption">数据越多、网络越大,性能越高;传统算法很快趋于平缓 (plateau)</div>
+    </div>
+    <p>要达到高性能:① 训练<b>足够大的网络</b>;② 投入<b>海量数据</b>。</p>
+    <div class="en-block">Traditional algorithms plateau as data grows. Bigger networks keep improving with more data. To hit high performance you need both a large enough network and a huge amount of data.</div>
+  </div>
+
+  <div class="card">
+    <h3><span class="num">2</span>数据从哪来 · The Rise of Data</h3>
+    <ul>
+      <li><mark>社会数字化 (digitalization of society)</mark>:手机、相机、传感器、物联网不断产生带标签数据。</li>
+      <li>符号约定:<span class="formula">m</span> = 训练样本数量 (number of training examples)。</li>
+      <li>⚠️ <b>小数据</b>场景下算法排序并不确定,<mark>手工设计特征 (hand-engineered features)</mark> 可能反而赢;大型 NN 只在<b>大数据</b>场景稳定占优。</li>
+    </ul>
+    <div class="en-block">With small training sets, the ordering of algorithms is not well defined — skill at hand-engineering features can win. Large neural nets dominate only in the big-data regime.</div>
+  </div>
+
+  <div class="card">
+    <h3><span class="num">3</span>三大驱动力 · Three Drivers</h3>
+    <div class="drivers">
+      <div class="d d1"><div class="icon">📊</div><h4>数据 Data</h4><p>数字化带来的海量带标签数据</p></div>
+      <div class="d d2"><div class="icon">⚡</div><h4>计算 Computation</h4><p>GPU 与专用硬件让训练大网络可行</p></div>
+      <div class="d d3"><div class="icon">💡</div><h4>算法 Algorithms</h4><p>大量创新,很多是为了让网络跑得更快</p></div>
+    </div>
+    <div class="en-block">Three forces drive deep learning: data, computation (GPUs, specialized hardware), and algorithmic innovation — much of which aims to make networks run faster.</div>
+  </div>
+
+  <div class="card">
+    <h3><span class="num">4</span>算法创新例子:Sigmoid → ReLU · Example of Algorithmic Innovation</h3>
+    <ul>
+      <li><b>Sigmoid 的问题</b>:两端区域<mark>梯度(斜率)接近 0</mark>,参数更新极慢,<b>梯度下降 (gradient descent)</b> 学习速度大幅变慢。</li>
+      <li><b>ReLU 的优势</b>:正区间梯度恒为 1,不会"梯度趋零",梯度下降<mark>快得多</mark>。</li>
+    </ul>
+    <div class="en-block">Sigmoid's gradient is nearly zero at the extremes, so learning becomes very slow. Switching to ReLU (gradient = 1 for positive inputs) makes gradient descent work much faster — a classic example of an algorithmic innovation that speeds up computation.</div>
+  </div>
+
+  <div class="card">
+    <h3><span class="num">5</span>快速迭代循环 · The Idea → Code → Experiment Cycle</h3>
+    <div class="cycle">
+      <span class="step">💡 想法 Idea</span><span class="arr">→</span>
+      <span class="step">⌨️ 代码 Code</span><span class="arr">→</span>
+      <span class="step">🧪 实验 Experiment</span>
+      <span class="loop">↻ 实验结果启发新想法,循环往复</span>
+    </div>
+    <p>训练一次可能要 10 分钟、1 天甚至 1 个月。<mark>训练越快 → 迭代越快 → 能尝试的想法越多</mark>,研究与产品效率大幅提升。</p>
+    <div class="en-block">Building networks is iterative. Faster training means faster iteration through the idea → code → experiment loop, so you can try many more ideas.</div>
+  </div>
+
+  <div class="card">
+    <h3><span class="num">6</span>未来会继续变好 · Why Optimism is Warranted</h3>
+    <p>三大驱动力都还在增强:数字化数据持续增长、专用硬件越来越强、算法创新不断涌现——因此深度学习在未来多年还会<mark>持续变得更好</mark>。</p>
+    <div class="en-block">All three forces — data, compute, and algorithms — are still improving, so deep learning will keep getting better for many years to come.</div>
+  </div>
+
+  <h2 class="section">名词卡片 <span class="en">Glossary · 点击「自测模式」可当抽认卡用</span></h2>
+
+  <div class="controls">
+    <button id="btnStudy" class="active" onclick="setMode(false)">📖 学习模式</button>
+    <button id="btnQuiz" onclick="setMode(true)">🎯 自测模式</button>
+  </div>
+  <p class="quiz-hint">自测模式:先回忆中文含义,再点击卡片查看答案。</p>
+
+  <div class="glossary" id="glossary">
+    <div class="term"><div class="word">Scale</div><div class="zh">规模</div><div class="def">数据规模 + 网络规模,驱动深度学习进步的核心因素</div></div>
+    <div class="term"><div class="word">Plateau</div><div class="zh">(性能)趋于平缓</div><div class="def">传统算法在数据变多后性能不再提升的现象</div></div>
+    <div class="term"><div class="word">m (number of training examples)</div><div class="zh">训练样本数</div><div class="def">课程符号约定:m 表示训练集大小</div></div>
+    <div class="term"><div class="word">Labeled Data</div><div class="zh">带标签数据</div><div class="def">同时包含输入 x 和答案 y 的数据</div></div>
+    <div class="term"><div class="word">Hand-engineered Features</div><div class="zh">手工设计特征</div><div class="def">人工设计输入特征;小数据场景下可能胜过神经网络</div></div>
+    <div class="term"><div class="word">Gradient Descent</div><div class="zh">梯度下降</div><div class="def">沿梯度方向逐步更新参数以降低误差的优化算法</div></div>
+    <div class="term"><div class="word">Gradient / Slope</div><div class="zh">梯度 / 斜率</div><div class="def">函数变化率;梯度接近 0 时参数更新极慢,学习变慢</div></div>
+    <div class="term"><div class="word">Sigmoid Function</div><div class="zh">Sigmoid 函数</div><div class="def">S 形激活函数,两端梯度接近 0,导致学习缓慢</div></div>
+    <div class="term"><div class="word">ReLU</div><div class="zh">修正线性单元</div><div class="def">max(0, x);正区间梯度为 1,使梯度下降快得多</div></div>
+    <div class="term"><div class="word">Digitalization</div><div class="zh">数字化</div><div class="def">社会活动转为数字记录,产生海量数据的根源</div></div>
+    <div class="term"><div class="word">GPU</div><div class="zh">图形处理器</div><div class="def">使大规模神经网络训练可行的关键硬件</div></div>
+    <div class="term"><div class="word">Idea → Code → Experiment</div><div class="zh">想法→代码→实验</div><div class="def">深度学习的迭代开发循环;训练速度决定迭代效率</div></div>
+  </div>
+
+  <footer>C1W1L04 复习笔记 · 中英双语版</footer>
+</div>
+
+<script>
+  const glossary = document.getElementById('glossary');
+  const body = document.body;
+  function setMode(quiz) {
+    glossary.classList.toggle('quiz-mode', quiz);
+    body.classList.toggle('quiz-mode-on', quiz);
+    document.getElementById('btnQuiz').classList.toggle('active', quiz);
+    document.getElementById('btnStudy').classList.toggle('active', !quiz);
+    document.querySelectorAll('.term').forEach(t => t.classList.remove('revealed'));
+  }
+  document.querySelectorAll('.term').forEach(t => {
+    t.addEventListener('click', () => {
+      if (glossary.classList.contains('quiz-mode')) t.classList.toggle('revealed');
+    });
+  });
+</script>
+</body>
+</html>

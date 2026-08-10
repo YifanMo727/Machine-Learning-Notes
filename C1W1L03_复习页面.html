@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>C1W1L03 · 用神经网络做监督学习 | Supervised Learning with a Neural Network</title>
+<style>
+  :root {
+    --bg: #f6f7fb;
+    --card: #ffffff;
+    --ink: #1f2430;
+    --muted: #6b7280;
+    --accent: #4f6df5;
+    --accent-soft: #eef1fe;
+    --en: #0e9f6e;
+    --en-soft: #e7f7f1;
+    --border: #e5e8f0;
+    --radius: 14px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", -apple-system, "Segoe UI", sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    line-height: 1.75;
+    padding: 32px 16px 64px;
+  }
+  .wrap { max-width: 860px; margin: 0 auto; }
+
+  header.hero {
+    background: linear-gradient(135deg, #4f6df5 0%, #7c5cf0 100%);
+    color: #fff;
+    border-radius: var(--radius);
+    padding: 36px 32px;
+    margin-bottom: 28px;
+  }
+  .hero .course { font-size: 13px; opacity: .85; letter-spacing: .5px; margin-bottom: 8px; }
+  .hero h1 { font-size: 28px; line-height: 1.35; }
+  .hero .en-title { font-size: 17px; font-weight: 400; opacity: .9; margin-top: 6px; }
+  .hero a { color: #dbe3ff; font-size: 13px; }
+
+  h2.section {
+    font-size: 20px;
+    margin: 36px 0 16px;
+    padding-left: 12px;
+    border-left: 4px solid var(--accent);
+  }
+  h2.section .en { color: var(--muted); font-weight: 500; font-size: 15px; margin-left: 8px; }
+
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 22px 24px;
+    margin-bottom: 16px;
+    box-shadow: 0 1px 3px rgba(30, 40, 90, .05);
+  }
+  .card h3 { font-size: 16.5px; margin-bottom: 10px; }
+  .card h3 .num {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 26px; height: 26px; border-radius: 50%;
+    background: var(--accent-soft); color: var(--accent);
+    font-size: 14px; margin-right: 10px; vertical-align: middle;
+  }
+  .card p, .card li { font-size: 15px; }
+  .card ul { padding-left: 22px; margin: 8px 0; }
+  .en-block {
+    margin-top: 10px;
+    padding: 10px 14px;
+    background: var(--en-soft);
+    border-left: 3px solid var(--en);
+    border-radius: 6px;
+    color: #14532d;
+    font-size: 14px;
+    font-family: Georgia, "Times New Roman", serif;
+  }
+  mark { background: #fff3c4; padding: 0 4px; border-radius: 4px; }
+
+  table.apps {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13.5px;
+    margin: 12px 0 4px;
+  }
+  table.apps th, table.apps td {
+    border: 1px solid var(--border);
+    padding: 8px 10px;
+    text-align: left;
+    vertical-align: top;
+  }
+  table.apps th { background: var(--accent-soft); color: #3b4fc0; font-size: 13px; }
+  table.apps td .zh { display: block; }
+  table.apps td .sub { color: var(--muted); font-size: 12px; }
+  .tag {
+    display: inline-block; padding: 1px 10px; border-radius: 999px;
+    font-size: 12px; font-weight: 600;
+  }
+  .tag.nn  { background: #eef1fe; color: #3b4fc0; }
+  .tag.cnn { background: #fdf0e7; color: #c2620e; }
+  .tag.rnn { background: #e7f7f1; color: #0e7a55; }
+  .tag.hyb { background: #f4e9fd; color: #8b3fc9; }
+
+  .vs { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 10px; }
+  .vs .col { border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; }
+  .vs .col h4 { font-size: 14px; margin-bottom: 6px; }
+  .vs .col.left  { background: #f2f5ff; }
+  .vs .col.right { background: #fff8ee; }
+  .vs .col ul { padding-left: 18px; font-size: 13.5px; }
+  @media (max-width: 620px) { .vs { grid-template-columns: 1fr; } }
+
+  /* Glossary flashcards */
+  .controls { display: flex; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; }
+  .controls button {
+    border: 1px solid var(--border);
+    background: var(--card);
+    padding: 7px 16px;
+    border-radius: 999px;
+    font-size: 13.5px;
+    cursor: pointer;
+    color: var(--ink);
+    transition: all .15s;
+  }
+  .controls button:hover { border-color: var(--accent); color: var(--accent); }
+  .controls button.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+  .glossary { display: grid; grid-template-columns: repeat(auto-fill, minmax(255px, 1fr)); gap: 12px; }
+  .term {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px 18px;
+    cursor: pointer;
+    transition: transform .12s, box-shadow .12s;
+    user-select: none;
+  }
+  .term:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(30,40,90,.08); }
+  .term .word { font-weight: 700; font-size: 15px; color: var(--accent); }
+  .term .zh { font-size: 14px; margin-top: 2px; }
+  .term .def {
+    font-size: 13.5px; color: var(--muted); margin-top: 8px;
+    border-top: 1px dashed var(--border); padding-top: 8px;
+  }
+  .quiz-mode .term .def, .quiz-mode .term .zh { display: none; }
+  .quiz-mode .term.revealed .def, .quiz-mode .term.revealed .zh { display: block; }
+  .quiz-hint { font-size: 13px; color: var(--muted); margin-bottom: 12px; display: none; }
+  .quiz-mode-on .quiz-hint { display: block; }
+
+  footer { text-align: center; color: var(--muted); font-size: 12.5px; margin-top: 48px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="hero">
+    <div class="course">Andrew Ng · 深度学习专项课程 · Course 1 Week 1 Lesson 3</div>
+    <h1>用神经网络做监督学习</h1>
+    <div class="en-title">Supervised Learning with a Neural Network (C1W1L03)</div>
+    <div style="margin-top:10px"><a href="https://www.youtube.com/watch?v=BYGpKPY9pO0" target="_blank">▶ 观看视频 Watch on YouTube</a></div>
+  </header>
+
+  <h2 class="section">核心知识点 <span class="en">Key Points</span></h2>
+
+  <div class="card">
+    <h3><span class="num">1</span>经济价值几乎都来自监督学习 · Value from Supervised Learning</h3>
+    <p>目前神经网络创造的经济价值,几乎全部来自<mark>监督学习 (supervised learning)</mark>:学习一个从输入 x 到输出 y 的映射。</p>
+    <div class="en-block">Almost all the economic value created by neural networks so far has been through supervised learning: learning a mapping from input x to output y.</div>
+  </div>
+
+  <div class="card">
+    <h3><span class="num">2</span>典型应用一览 · Example Applications</h3>
+    <table class="apps">
+      <tr><th>输入 x</th><th>输出 y</th><th>应用 Application</th><th>网络类型</th></tr>
+      <tr><td>房屋特征<span class="sub">Home features</span></td><td>房价<span class="sub">Price</span></td><td>房地产<span class="sub">Real estate</span></td><td><span class="tag nn">标准 NN</span></td></tr>
+      <tr><td>广告 + 用户信息<span class="sub">Ad, user info</span></td><td>是否点击 (0/1)<span class="sub">Click?</span></td><td>在线广告<span class="sub">Online advertising</span></td><td><span class="tag nn">标准 NN</span></td></tr>
+      <tr><td>图像<span class="sub">Image</span></td><td>物体类别 (1…1000)<span class="sub">Object</span></td><td>照片标记<span class="sub">Photo tagging</span></td><td><span class="tag cnn">CNN</span></td></tr>
+      <tr><td>音频<span class="sub">Audio</span></td><td>文字稿<span class="sub">Text transcript</span></td><td>语音识别<span class="sub">Speech recognition</span></td><td><span class="tag rnn">RNN</span></td></tr>
+      <tr><td>英语<span class="sub">English</span></td><td>中文<span class="sub">Chinese</span></td><td>机器翻译<span class="sub">Machine translation</span></td><td><span class="tag rnn">RNN</span></td></tr>
+      <tr><td>图像 + 雷达<span class="sub">Image, radar</span></td><td>车辆位置<span class="sub">Position of cars</span></td><td>自动驾驶<span class="sub">Autonomous driving</span></td><td><span class="tag hyb">定制混合</span></td></tr>
+    </table>
+    <p style="margin-top:8px">💰 <b>在线广告</b>是目前神经网络<mark>最赚钱</mark>的应用之一:预测用户是否会点击某条广告。</p>
+    <div class="en-block">Online advertising is one of the most lucrative applications of neural networks today: predicting whether a user will click on an ad.</div>
+  </div>
+
+  <div class="card">
+    <h3><span class="num">3</span>三种主要网络结构 · Types of Neural Networks</h3>
+    <ul>
+      <li><span class="tag nn">Standard NN</span> <b>标准神经网络</b>:一般的结构化数据(房价、广告)</li>
+      <li><span class="tag cnn">CNN</span> <b>卷积神经网络</b>:通常用于<mark>图像数据 (image data)</mark></li>
+      <li><span class="tag rnn">RNN</span> <b>循环神经网络</b>:用于<mark>序列数据 (sequence data)</mark>——音频是一维时间序列,语言中单词按顺序出现</li>
+      <li><span class="tag hyb">Hybrid</span> <b>定制/混合结构</b>:复杂应用(如自动驾驶)会组合多种网络</li>
+    </ul>
+    <div class="en-block">Standard NNs for structured data; CNNs typically for images; RNNs for sequence data like audio and language; complex applications use custom hybrid architectures.</div>
+  </div>
+
+  <div class="card">
+    <h3><span class="num">4</span>结构化 vs 非结构化数据 · Structured vs Unstructured Data</h3>
+    <div class="vs">
+      <div class="col left">
+        <h4>📊 结构化数据 Structured</h4>
+        <ul>
+          <li>数据库型数据 (databases of data)</li>
+          <li>每个特征含义明确:面积、卧室数、用户年龄、广告 ID…</li>
+          <li>短期内创造经济价值最多(广告、推荐系统)</li>
+        </ul>
+      </div>
+      <div class="col right">
+        <h4>🎨 非结构化数据 Unstructured</h4>
+        <ul>
+          <li>音频、图像、文本 (audio, images, text)</li>
+          <li>特征是像素值、单个词,无表格含义</li>
+          <li>深度学习让计算机在这类数据上突飞猛进</li>
+        </ul>
+      </div>
+    </div>
+    <div class="en-block">Historically it was much harder for computers to make sense of unstructured data. Thanks to deep learning, computers are now much better at speech recognition and image recognition — but much of the short-term economic value still comes from structured data.</div>
+  </div>
+
+  <h2 class="section">名词卡片 <span class="en">Glossary · 点击「自测模式」可当抽认卡用</span></h2>
+
+  <div class="controls">
+    <button id="btnStudy" class="active" onclick="setMode(false)">📖 学习模式</button>
+    <button id="btnQuiz" onclick="setMode(true)">🎯 自测模式</button>
+  </div>
+  <p class="quiz-hint">自测模式:先回忆中文含义,再点击卡片查看答案。</p>
+
+  <div class="glossary" id="glossary">
+    <div class="term"><div class="word">Supervised Learning</div><div class="zh">监督学习</div><div class="def">用带标签的 (x, y) 数据学习从输入到输出的映射</div></div>
+    <div class="term"><div class="word">Standard Neural Network</div><div class="zh">标准神经网络</div><div class="def">全连接的普通网络,常用于结构化数据(房价、广告)</div></div>
+    <div class="term"><div class="word">CNN (Convolutional Neural Network)</div><div class="zh">卷积神经网络</div><div class="def">常用于图像数据的网络结构</div></div>
+    <div class="term"><div class="word">RNN (Recurrent Neural Network)</div><div class="zh">循环神经网络</div><div class="def">用于序列数据(音频、文本等)的网络结构</div></div>
+    <div class="term"><div class="word">Sequence Data</div><div class="zh">序列数据</div><div class="def">有时间/顺序关系的数据,如音频(一维时间序列)、句子</div></div>
+    <div class="term"><div class="word">Structured Data</div><div class="zh">结构化数据</div><div class="def">数据库型数据,每个特征含义明确(面积、年龄、广告 ID)</div></div>
+    <div class="term"><div class="word">Unstructured Data</div><div class="zh">非结构化数据</div><div class="def">音频、图像、文本等无表格结构的数据</div></div>
+    <div class="term"><div class="word">Online Advertising</div><div class="zh">在线广告</div><div class="def">神经网络最赚钱的应用之一:预测用户是否点击广告</div></div>
+    <div class="term"><div class="word">Machine Translation</div><div class="zh">机器翻译</div><div class="def">输入一种语言、输出另一种语言的监督学习任务(RNN)</div></div>
+    <div class="term"><div class="word">Custom / Hybrid Architecture</div><div class="zh">定制 / 混合结构</div><div class="def">为复杂任务(如自动驾驶)组合多种网络类型的结构</div></div>
+  </div>
+
+  <footer>C1W1L03 复习笔记 · 中英双语版</footer>
+</div>
+
+<script>
+  const glossary = document.getElementById('glossary');
+  const body = document.body;
+  function setMode(quiz) {
+    glossary.classList.toggle('quiz-mode', quiz);
+    body.classList.toggle('quiz-mode-on', quiz);
+    document.getElementById('btnQuiz').classList.toggle('active', quiz);
+    document.getElementById('btnStudy').classList.toggle('active', !quiz);
+    document.querySelectorAll('.term').forEach(t => t.classList.remove('revealed'));
+  }
+  document.querySelectorAll('.term').forEach(t => {
+    t.addEventListener('click', () => {
+      if (glossary.classList.contains('quiz-mode')) t.classList.toggle('revealed');
+    });
+  });
+</script>
+</body>
+</html>

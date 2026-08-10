@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>C1W2L09 · 逻辑回归的梯度下降 | Logistic Regression Gradient Descent</title>
+<style>
+  :root {
+    --bg: #f6f7fb; --card: #ffffff; --ink: #1f2430; --muted: #6b7280;
+    --accent: #4f6df5; --accent-soft: #eef1fe;
+    --en: #0e9f6e; --en-soft: #e7f7f1;
+    --border: #e5e8f0; --radius: 14px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", -apple-system, "Segoe UI", sans-serif;
+    background: var(--bg); color: var(--ink); line-height: 1.75; padding: 32px 16px 64px;
+  }
+  .wrap { max-width: 860px; margin: 0 auto; }
+  header.hero {
+    background: linear-gradient(135deg, #4f6df5 0%, #7c5cf0 100%);
+    color: #fff; border-radius: var(--radius); padding: 36px 32px; margin-bottom: 28px;
+  }
+  .hero .course { font-size: 13px; opacity: .85; letter-spacing: .5px; margin-bottom: 8px; }
+  .hero h1 { font-size: 28px; line-height: 1.35; }
+  .hero .en-title { font-size: 17px; font-weight: 400; opacity: .9; margin-top: 6px; }
+  .hero a { color: #dbe3ff; font-size: 13px; }
+  .hero .note { margin-top: 12px; font-size: 13px; background: rgba(255,255,255,.15); padding: 6px 14px; border-radius: 8px; display: inline-block; }
+  h2.section { font-size: 20px; margin: 36px 0 16px; padding-left: 12px; border-left: 4px solid var(--accent); }
+  h2.section .en { color: var(--muted); font-weight: 500; font-size: 15px; margin-left: 8px; }
+  .card {
+    background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 22px 24px; margin-bottom: 16px; box-shadow: 0 1px 3px rgba(30, 40, 90, .05);
+  }
+  .card h3 { font-size: 16.5px; margin-bottom: 10px; }
+  .card h3 .num {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 26px; height: 26px; border-radius: 50%;
+    background: var(--accent-soft); color: var(--accent);
+    font-size: 14px; margin-right: 10px; vertical-align: middle;
+  }
+  .card p, .card li { font-size: 15px; }
+  .card ul, .card ol { padding-left: 22px; margin: 8px 0; }
+  .en-block {
+    margin-top: 10px; padding: 10px 14px; background: var(--en-soft);
+    border-left: 3px solid var(--en); border-radius: 6px; color: #14532d;
+    font-size: 14px; font-family: Georgia, "Times New Roman", serif;
+  }
+  mark { background: #fff3c4; padding: 0 4px; border-radius: 4px; }
+  .formula { font-family: "SF Mono", Consolas, monospace; background: #f1f3f9; padding: 1px 7px; border-radius: 5px; font-size: 14px; }
+  .big-formula {
+    font-family: "SF Mono", Consolas, monospace; background: #f1f3f9;
+    border: 1px solid var(--border); border-radius: 8px;
+    padding: 10px 16px; margin: 10px 0; font-size: 15.5px; text-align: center; overflow-x: auto;
+  }
+  .hl-formula {
+    font-family: "SF Mono", Consolas, monospace; background: #fff3c4;
+    border: 2px solid #e5b800; border-radius: 8px;
+    padding: 12px 16px; margin: 10px 0; font-size: 17px; text-align: center; font-weight: 700;
+  }
+  .chart-caption { font-size: 12.5px; color: var(--muted); text-align: center; margin-top: 4px; }
+  table.d { width: 100%; border-collapse: collapse; font-size: 14px; margin: 12px 0 4px; }
+  table.d th, table.d td { border: 1px solid var(--border); padding: 8px 12px; text-align: center; }
+  table.d th { background: var(--accent-soft); color: #3b4fc0; font-size: 13px; }
+  table.d td.f { font-family: "SF Mono", Consolas, monospace; }
+  .controls { display: flex; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; }
+  .controls button {
+    border: 1px solid var(--border); background: var(--card); padding: 7px 16px;
+    border-radius: 999px; font-size: 13.5px; cursor: pointer; color: var(--ink); transition: all .15s;
+  }
+  .controls button:hover { border-color: var(--accent); color: var(--accent); }
+  .controls button.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .glossary { display: grid; grid-template-columns: repeat(auto-fill, minmax(255px, 1fr)); gap: 12px; }
+  .term {
+    background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+    padding: 16px 18px; cursor: pointer; transition: transform .12s, box-shadow .12s; user-select: none;
+  }
+  .term:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(30,40,90,.08); }
+  .term .word { font-weight: 700; font-size: 15px; color: var(--accent); }
+  .term .zh { font-size: 14px; margin-top: 2px; }
+  .term .def { font-size: 13.5px; color: var(--muted); margin-top: 8px; border-top: 1px dashed var(--border); padding-top: 8px; }
+  .quiz-mode .term .def, .quiz-mode .term .zh { display: none; }
+  .quiz-mode .term.revealed .def, .quiz-mode .term.revealed .zh { display: block; }
+  .quiz-hint { font-size: 13px; color: var(--muted); margin-bottom: 12px; display: none; }
+  .quiz-mode-on .quiz-hint { display: block; }
+  footer { text-align: center; color: var(--muted); font-size: 12.5px; margin-top: 48px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="hero">
+    <div class="course">Andrew Ng · 深度学习专项课程 · Course 1 Week 2 Lesson 9</div>
+    <h1>逻辑回归的梯度下降</h1>
+    <div class="en-title">Logistic Regression Gradient Descent (C1W2L09)</div>
+    <div style="margin-top:10px"><a href="https://www.youtube.com/watch?v=z_xiwjEdAC4" target="_blank">▶ 观看视频 Watch on YouTube</a></div>
+    <div class="note">⭐ 把计算图和链式法则用到真正的模型上(单个样本)</div>
+  </header>
+
+  <h2 class="section">核心知识点 <span class="en">Key Points</span></h2>
+
+  <div class="card">
+    <h3><span class="num">1</span>单样本的计算图 · The Computation Graph</h3>
+    <p>设两个特征 x₁, x₂,前向计算三步:</p>
+    <svg viewBox="0 0 660 210" width="100%" xmlns="http://www.w3.org/2000/svg">
+      <rect x="15" y="15" width="105" height="36" rx="8" fill="#eef1fe" stroke="#4f6df5"/>
+      <text x="67" y="38" font-size="13" text-anchor="middle" fill="#3b4fc0">x₁, w₁</text>
+      <rect x="15" y="65" width="105" height="36" rx="8" fill="#eef1fe" stroke="#4f6df5"/>
+      <text x="67" y="88" font-size="13" text-anchor="middle" fill="#3b4fc0">x₂, w₂</text>
+      <rect x="15" y="115" width="105" height="36" rx="8" fill="#eef1fe" stroke="#4f6df5"/>
+      <text x="67" y="138" font-size="13" text-anchor="middle" fill="#3b4fc0">b</text>
+      <rect x="185" y="60" width="160" height="48" rx="10" fill="#fff" stroke="#c2620e" stroke-width="2"/>
+      <text x="265" y="89" font-size="13" text-anchor="middle" fill="#c2620e">z = w₁x₁+w₂x₂+b</text>
+      <rect x="400" y="60" width="100" height="48" rx="10" fill="#fff" stroke="#0e9f6e" stroke-width="2"/>
+      <text x="450" y="89" font-size="13" text-anchor="middle" fill="#0e7a55">a = σ(z)</text>
+      <rect x="552" y="60" width="95" height="48" rx="10" fill="#4f6df5"/>
+      <text x="599" y="89" font-size="13" text-anchor="middle" fill="#fff">L(a, y)</text>
+      <line x1="120" y1="33" x2="185" y2="70" stroke="#9aa3b5" stroke-width="2"/>
+      <line x1="120" y1="83" x2="185" y2="84" stroke="#9aa3b5" stroke-width="2"/>
+      <line x1="120" y1="133" x2="185" y2="98" stroke="#9aa3b5" stroke-width="2"/>
+      <line x1="345" y1="84" x2="400" y2="84" stroke="#9aa3b5" stroke-width="2"/>
+      <polygon points="400,84 391,79 391,89" fill="#9aa3b5"/>
+      <line x1="500" y1="84" x2="552" y2="84" stroke="#9aa3b5" stroke-width="2"/>
+      <polygon points="552,84 543,79 543,89" fill="#9aa3b5"/>
+      <!-- backward arrows -->
+      <path d="M 580 120 C 540 155, 490 155, 460 118" fill="none" stroke="#e0523e" stroke-width="2"/>
+      <polygon points="460,118 469,124 472,114" fill="#e0523e"/>
+      <text x="500" y="168" font-size="11.5" fill="#e0523e">da</text>
+      <path d="M 430 120 C 390 155, 330 155, 300 118" fill="none" stroke="#e0523e" stroke-width="2"/>
+      <polygon points="300,118 309,124 312,114" fill="#e0523e"/>
+      <text x="352" y="168" font-size="11.5" fill="#e0523e">dz = a − y</text>
+      <path d="M 230 120 C 190 160, 130 168, 90 158" fill="none" stroke="#e0523e" stroke-width="2"/>
+      <polygon points="90,158 101,155 99,165" fill="#e0523e"/>
+      <text x="130" y="190" font-size="11.5" fill="#e0523e">dw₁, dw₂, db</text>
+    </svg>
+    <div class="chart-caption">前向(灰)算出损失 L,反向(红)把导数传回参数</div>
+    <div class="big-formula">z = w₁x₁ + w₂x₂ + b → a = σ(z) → L = −[y·log a + (1−y)·log(1−a)]</div>
+    <div class="en-block">Forward: z = w₁x₁ + w₂x₂ + b, then a = σ(z) (this is ŷ), then the loss L(a, y). We want dL/dw₁, dL/dw₂, dL/db.</div>
+  </div>
+
+  <div class="card">
+    <h3><span class="num">2</span>反向第一步:da · Backward Step 1</h3>
+    <div class="big-formula">da = dL/da = −y/a + (1−y)/(1−a)</div>
+    <div class="en-block">The first backward step: differentiate the loss with respect to a.</div>
+  </div>
+
+  <div class="card">
+    <h3><span class="num">3</span>反向第二步:dz · Backward Step 2 ⭐⭐</h3>
+    <p>链式法则:dz = da · (da/dz),其中 sigmoid 的导数 <span class="formula">da/dz = a(1−a)</span>。两式相乘,奇迹般地化简为:</p>
+    <div class="hl-formula">dz = a − y</div>
+    <p><mark>预测值减真实值</mark>——整讲最重要的公式,后面所有实现都直接用它。</p>
+    <div class="en-block">By the chain rule, dz = da · a(1−a), which simplifies beautifully to dz = a − y: prediction minus label. Memorize this one.</div>
+  </div>
+
+  <div class="card">
+    <h3><span class="num">4</span>参数的导数与更新 · Parameter Derivatives &amp; Update</h3>
+    <table class="d">
+      <tr><th>量</th><th>公式</th></tr>
+      <tr><td class="f">dw₁</td><td class="f">x₁ · dz</td></tr>
+      <tr><td class="f">dw₂</td><td class="f">x₂ · dz</td></tr>
+      <tr><td class="f">db</td><td class="f">dz</td></tr>
+    </table>
+    <p>然后做一步梯度下降:</p>
+    <div class="big-formula">w₁ := w₁ − α·dw₁&nbsp;&nbsp;&nbsp;w₂ := w₂ − α·dw₂&nbsp;&nbsp;&nbsp;b := b − α·db</div>
+    <p>注意:这是<b>单个样本</b>上的一次更新;m 个样本 → 下一讲。</p>
+    <div class="en-block">dw₁ = x₁·dz, dw₂ = x₂·dz, db = dz; then update each parameter with learning rate α. This is for one training example — next lecture extends to m examples.</div>
+  </div>
+
+  <h2 class="section">名词卡片 <span class="en">Glossary · 点击「自测模式」可当抽认卡用</span></h2>
+
+  <div class="controls">
+    <button id="btnStudy" class="active" onclick="setMode(false)">📖 学习模式</button>
+    <button id="btnQuiz" onclick="setMode(true)">🎯 自测模式</button>
+  </div>
+  <p class="quiz-hint">自测模式:先回忆中文含义,再点击卡片查看答案。</p>
+
+  <div class="glossary" id="glossary">
+    <div class="term"><div class="word">a (activation)</div><div class="zh">激活值</div><div class="def">σ(z) 的输出,即预测值 ŷ</div></div>
+    <div class="term"><div class="word">da, dz, dw, db</div><div class="zh">反向传播变量</div><div class="def">代码记号:损失 L 对各量的导数</div></div>
+    <div class="term"><div class="word">dz = a − y</div><div class="zh">核心公式</div><div class="def">预测值减真实值;逻辑回归反向传播的关键结果</div></div>
+    <div class="term"><div class="word">Derivative of Sigmoid</div><div class="zh">Sigmoid 的导数</div><div class="def">dσ/dz = σ(z)(1−σ(z)) = a(1−a)</div></div>
+    <div class="term"><div class="word">One Step of Gradient Descent</div><div class="zh">一步梯度下降</div><div class="def">用当前梯度对参数做一次更新</div></div>
+    <div class="term"><div class="word">Single Training Example</div><div class="zh">单个训练样本</div><div class="def">本讲只考虑一个 (x, y);m 个样本见下一讲</div></div>
+  </div>
+
+  <footer>C1W2L09 复习笔记 · 中英双语版</footer>
+</div>
+
+<script>
+  const glossary = document.getElementById('glossary');
+  const body = document.body;
+  function setMode(quiz) {
+    glossary.classList.toggle('quiz-mode', quiz);
+    body.classList.toggle('quiz-mode-on', quiz);
+    document.getElementById('btnQuiz').classList.toggle('active', quiz);
+    document.getElementById('btnStudy').classList.toggle('active', !quiz);
+    document.querySelectorAll('.term').forEach(t => t.classList.remove('revealed'));
+  }
+  document.querySelectorAll('.term').forEach(t => {
+    t.addEventListener('click', () => {
+      if (glossary.classList.contains('quiz-mode')) t.classList.toggle('revealed');
+    });
+  });
+</script>
+</body>
+</html>

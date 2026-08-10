@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>C1W2L03 · 成本函数 | Logistic Regression Cost Function</title>
+<style>
+  :root {
+    --bg: #f6f7fb;
+    --card: #ffffff;
+    --ink: #1f2430;
+    --muted: #6b7280;
+    --accent: #4f6df5;
+    --accent-soft: #eef1fe;
+    --en: #0e9f6e;
+    --en-soft: #e7f7f1;
+    --border: #e5e8f0;
+    --radius: 14px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", -apple-system, "Segoe UI", sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    line-height: 1.75;
+    padding: 32px 16px 64px;
+  }
+  .wrap { max-width: 860px; margin: 0 auto; }
+
+  header.hero {
+    background: linear-gradient(135deg, #4f6df5 0%, #7c5cf0 100%);
+    color: #fff;
+    border-radius: var(--radius);
+    padding: 36px 32px;
+    margin-bottom: 28px;
+  }
+  .hero .course { font-size: 13px; opacity: .85; letter-spacing: .5px; margin-bottom: 8px; }
+  .hero h1 { font-size: 28px; line-height: 1.35; }
+  .hero .en-title { font-size: 17px; font-weight: 400; opacity: .9; margin-top: 6px; }
+  .hero a { color: #dbe3ff; font-size: 13px; }
+
+  h2.section {
+    font-size: 20px;
+    margin: 36px 0 16px;
+    padding-left: 12px;
+    border-left: 4px solid var(--accent);
+  }
+  h2.section .en { color: var(--muted); font-weight: 500; font-size: 15px; margin-left: 8px; }
+
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 22px 24px;
+    margin-bottom: 16px;
+    box-shadow: 0 1px 3px rgba(30, 40, 90, .05);
+  }
+  .card h3 { font-size: 16.5px; margin-bottom: 10px; }
+  .card h3 .num {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 26px; height: 26px; border-radius: 50%;
+    background: var(--accent-soft); color: var(--accent);
+    font-size: 14px; margin-right: 10px; vertical-align: middle;
+  }
+  .card p, .card li { font-size: 15px; }
+  .card ul { padding-left: 22px; margin: 8px 0; }
+  .en-block {
+    margin-top: 10px;
+    padding: 10px 14px;
+    background: var(--en-soft);
+    border-left: 3px solid var(--en);
+    border-radius: 6px;
+    color: #14532d;
+    font-size: 14px;
+    font-family: Georgia, "Times New Roman", serif;
+  }
+  mark { background: #fff3c4; padding: 0 4px; border-radius: 4px; }
+  .formula {
+    font-family: "SF Mono", Consolas, monospace;
+    background: #f1f3f9;
+    padding: 1px 7px;
+    border-radius: 5px;
+    font-size: 14px;
+  }
+  .big-formula {
+    font-family: "SF Mono", Consolas, monospace;
+    background: #f1f3f9;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 16px;
+    margin: 10px 0;
+    font-size: 15px;
+    text-align: center;
+    overflow-x: auto;
+  }
+  .chart-caption { font-size: 12.5px; color: var(--muted); text-align: center; margin-top: 4px; }
+
+  .vs { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 10px; }
+  .vs .col { border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; }
+  .vs .col h4 { font-size: 14.5px; margin-bottom: 6px; }
+  .vs .col.left  { background: #f2f5ff; }
+  .vs .col.right { background: #fff8ee; }
+  .vs .col p { font-size: 13.5px; }
+  @media (max-width: 620px) { .vs { grid-template-columns: 1fr; } }
+
+  /* Glossary flashcards */
+  .controls { display: flex; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; }
+  .controls button {
+    border: 1px solid var(--border);
+    background: var(--card);
+    padding: 7px 16px;
+    border-radius: 999px;
+    font-size: 13.5px;
+    cursor: pointer;
+    color: var(--ink);
+    transition: all .15s;
+  }
+  .controls button:hover { border-color: var(--accent); color: var(--accent); }
+  .controls button.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+  .glossary { display: grid; grid-template-columns: repeat(auto-fill, minmax(255px, 1fr)); gap: 12px; }
+  .term {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px 18px;
+    cursor: pointer;
+    transition: transform .12s, box-shadow .12s;
+    user-select: none;
+  }
+  .term:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(30,40,90,.08); }
+  .term .word { font-weight: 700; font-size: 15px; color: var(--accent); }
+  .term .zh { font-size: 14px; margin-top: 2px; }
+  .term .def {
+    font-size: 13.5px; color: var(--muted); margin-top: 8px;
+    border-top: 1px dashed var(--border); padding-top: 8px;
+  }
+  .quiz-mode .term .def, .quiz-mode .term .zh { display: none; }
+  .quiz-mode .term.revealed .def, .quiz-mode .term.revealed .zh { display: block; }
+  .quiz-hint { font-size: 13px; color: var(--muted); margin-bottom: 12px; display: none; }
+  .quiz-mode-on .quiz-hint { display: block; }
+
+  footer { text-align: center; color: var(--muted); font-size: 12.5px; margin-top: 48px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="hero">
+    <div class="course">Andrew Ng · 深度学习专项课程 · Course 1 Week 2 Lesson 3</div>
+    <h1>逻辑回归的成本函数</h1>
+    <div class="en-title">Logistic Regression Cost Function (C1W2L03)</div>
+    <div style="margin-top:10px"><a href="https://www.youtube.com/watch?v=SHEPb1JHw5o" target="_blank">▶ 观看视频 Watch on YouTube</a></div>
+  </header>
+
+  <h2 class="section">核心知识点 <span class="en">Key Points</span></h2>
+
+  <div class="card">
+    <h3><span class="num">1</span>我们要衡量什么 · What We Need to Measure</h3>
+    <p>上一讲:<span class="formula">ŷ = σ(wᵀx + b)</span>。训练目标是让每个样本的预测 <mark>ŷ⁽ⁱ⁾ ≈ y⁽ⁱ⁾</mark>。需要一个函数衡量"预测得好不好"——<b>损失函数 (loss function)</b>。</p>
+    <div class="en-block">We want ŷ⁽ⁱ⁾ ≈ y⁽ⁱ⁾ on the training set. The loss function measures how good the prediction ŷ is compared to the true label y.</div>
+  </div>
+
+  <div class="card">
+    <h3><span class="num">2</span>为什么不用平方误差 · Why Not Squared Error</h3>
+    <p>直觉上可以用 <span class="formula">L = ½(ŷ − y)²</span>,但在逻辑回归里它会让优化问题变成<mark>非凸 (non-convex)</mark>:</p>
+    <svg viewBox="0 0 620 200" width="100%" xmlns="http://www.w3.org/2000/svg">
+      <!-- non-convex left -->
+      <path d="M 40 60 C 70 140, 95 155, 120 120 C 140 95, 155 100, 175 140 C 200 185, 235 165, 270 70"
+            fill="none" stroke="#c0392b" stroke-width="2.5"/>
+      <circle cx="123" cy="121" r="4.5" fill="#c0392b"/>
+      <text x="110" y="108" font-size="11" fill="#c0392b">局部最优</text>
+      <circle cx="185" cy="152" r="4.5" fill="#c0392b"/>
+      <text x="155" y="178" font-size="12.5" fill="#c0392b" font-weight="bold">✗ 非凸 non-convex</text>
+      <!-- convex right -->
+      <path d="M 350 55 C 400 175, 500 175, 580 55" fill="none" stroke="#0e9f6e" stroke-width="2.5"/>
+      <circle cx="465" cy="145" r="5" fill="#0e9f6e"/>
+      <text x="428" y="132" font-size="11" fill="#0e7a55">唯一全局最优</text>
+      <text x="415" y="178" font-size="12.5" fill="#0e7a55" font-weight="bold">✓ 凸 convex</text>
+    </svg>
+    <div class="chart-caption">非凸:梯度下降可能困在局部最优;凸:一定能滑到全局最优</div>
+    <div class="en-block">Squared error makes the optimization non-convex: gradient descent can get stuck in local optima. We want a loss that gives a convex problem with a single global optimum.</div>
+  </div>
+
+  <div class="card">
+    <h3><span class="num">3</span>逻辑回归的损失函数 · The Loss Function ⭐</h3>
+    <div class="big-formula">L(ŷ, y) = −[ y·log(ŷ) + (1−y)·log(1−ŷ) ]</div>
+    <p>直觉理解,分两种情况:</p>
+    <div class="vs">
+      <div class="col left">
+        <h4>若 y = 1</h4>
+        <p>L = −log(ŷ)<br>想让损失小 → <mark>ŷ 要大</mark>(接近 1)✓</p>
+      </div>
+      <div class="col right">
+        <h4>若 y = 0</h4>
+        <p>L = −log(1−ŷ)<br>想让损失小 → <mark>ŷ 要小</mark>(接近 0)✓</p>
+      </div>
+    </div>
+    <div class="en-block">If y = 1, the loss is −log ŷ, so minimizing it pushes ŷ toward 1. If y = 0, the loss is −log(1−ŷ), pushing ŷ toward 0. It behaves like squared error but keeps the problem convex.</div>
+  </div>
+
+  <div class="card">
+    <h3><span class="num">4</span>损失函数 vs 成本函数 · Loss vs Cost ⭐⭐</h3>
+    <div class="vs">
+      <div class="col left">
+        <h4>损失函数 Loss L(ŷ, y)</h4>
+        <p>衡量<mark>单个</mark>训练样本的表现</p>
+      </div>
+      <div class="col right">
+        <h4>成本函数 Cost J(w, b)</h4>
+        <p>整个训练集上损失的<mark>平均值</mark>,衡量参数 w, b 的整体表现</p>
+      </div>
+    </div>
+    <div class="big-formula">J(w, b) = (1/m) Σᵢ L(ŷ⁽ⁱ⁾, y⁽ⁱ⁾)<br>= −(1/m) Σᵢ [ y⁽ⁱ⁾log ŷ⁽ⁱ⁾ + (1−y⁽ⁱ⁾)log(1−ŷ⁽ⁱ⁾) ]</div>
+    <div class="en-block">The loss function measures performance on a single example; the cost function J(w, b) is the average loss over the entire training set.</div>
+  </div>
+
+  <div class="card">
+    <h3><span class="num">5</span>训练目标 · The Training Objective</h3>
+    <p>训练 = 找到让 <mark>J(w, b) 最小</mark>的 w 和 b。方法是<b>梯度下降 (gradient descent)</b>——下一讲。另外,逻辑回归可以看作一个<mark>极小的神经网络</mark>。</p>
+    <div class="en-block">Training means finding w, b that minimize J(w, b), using gradient descent. Logistic regression can be viewed as a very small neural network.</div>
+  </div>
+
+  <h2 class="section">名词卡片 <span class="en">Glossary · 点击「自测模式」可当抽认卡用</span></h2>
+
+  <div class="controls">
+    <button id="btnStudy" class="active" onclick="setMode(false)">📖 学习模式</button>
+    <button id="btnQuiz" onclick="setMode(true)">🎯 自测模式</button>
+  </div>
+  <p class="quiz-hint">自测模式:先回忆中文含义,再点击卡片查看答案。</p>
+
+  <div class="glossary" id="glossary">
+    <div class="term"><div class="word">Loss / Error Function L(ŷ, y)</div><div class="zh">损失函数</div><div class="def">衡量单个样本预测好坏的函数</div></div>
+    <div class="term"><div class="word">Cost Function J(w, b)</div><div class="zh">成本函数</div><div class="def">整个训练集上损失的平均;训练要最小化的目标</div></div>
+    <div class="term"><div class="word">Squared Error</div><div class="zh">平方误差</div><div class="def">½(ŷ−y)²;逻辑回归中导致非凸问题,不采用</div></div>
+    <div class="term"><div class="word">Convex</div><div class="zh">凸(函数/问题)</div><div class="def">碗形,只有一个全局最优,梯度下降一定能找到</div></div>
+    <div class="term"><div class="word">Non-convex</div><div class="zh">非凸</div><div class="def">有多个局部最优,梯度下降可能被困住</div></div>
+    <div class="term"><div class="word">Local Optimum</div><div class="zh">局部最优</div><div class="def">局部范围内最好、但非全局最好的解</div></div>
+    <div class="term"><div class="word">Global Optimum</div><div class="zh">全局最优</div><div class="def">整个参数空间中最好的解</div></div>
+    <div class="term"><div class="word">−log(ŷ)</div><div class="zh">负对数</div><div class="def">y=1 时的损失;ŷ→1 时趋于 0,ŷ→0 时趋于无穷大</div></div>
+    <div class="term"><div class="word">Cross-entropy Loss</div><div class="zh">交叉熵损失</div><div class="def">本讲损失函数的通用名称</div></div>
+    <div class="term"><div class="word">Optimization Problem</div><div class="zh">优化问题</div><div class="def">寻找使目标函数最小的参数的过程</div></div>
+  </div>
+
+  <footer>C1W2L03 复习笔记 · 中英双语版</footer>
+</div>
+
+<script>
+  const glossary = document.getElementById('glossary');
+  const body = document.body;
+  function setMode(quiz) {
+    glossary.classList.toggle('quiz-mode', quiz);
+    body.classList.toggle('quiz-mode-on', quiz);
+    document.getElementById('btnQuiz').classList.toggle('active', quiz);
+    document.getElementById('btnStudy').classList.toggle('active', !quiz);
+    document.querySelectorAll('.term').forEach(t => t.classList.remove('revealed'));
+  }
+  document.querySelectorAll('.term').forEach(t => {
+    t.addEventListener('click', () => {
+      if (glossary.classList.contains('quiz-mode')) t.classList.toggle('revealed');
+    });
+  });
+</script>
+</body>
+</html>

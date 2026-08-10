@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>C1W2L07 · 计算图 | Computation Graph</title>
+<style>
+  :root {
+    --bg: #f6f7fb; --card: #ffffff; --ink: #1f2430; --muted: #6b7280;
+    --accent: #4f6df5; --accent-soft: #eef1fe;
+    --en: #0e9f6e; --en-soft: #e7f7f1;
+    --border: #e5e8f0; --radius: 14px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", -apple-system, "Segoe UI", sans-serif;
+    background: var(--bg); color: var(--ink); line-height: 1.75; padding: 32px 16px 64px;
+  }
+  .wrap { max-width: 860px; margin: 0 auto; }
+  header.hero {
+    background: linear-gradient(135deg, #4f6df5 0%, #7c5cf0 100%);
+    color: #fff; border-radius: var(--radius); padding: 36px 32px; margin-bottom: 28px;
+  }
+  .hero .course { font-size: 13px; opacity: .85; letter-spacing: .5px; margin-bottom: 8px; }
+  .hero h1 { font-size: 28px; line-height: 1.35; }
+  .hero .en-title { font-size: 17px; font-weight: 400; opacity: .9; margin-top: 6px; }
+  .hero a { color: #dbe3ff; font-size: 13px; }
+  h2.section { font-size: 20px; margin: 36px 0 16px; padding-left: 12px; border-left: 4px solid var(--accent); }
+  h2.section .en { color: var(--muted); font-weight: 500; font-size: 15px; margin-left: 8px; }
+  .card {
+    background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 22px 24px; margin-bottom: 16px; box-shadow: 0 1px 3px rgba(30, 40, 90, .05);
+  }
+  .card h3 { font-size: 16.5px; margin-bottom: 10px; }
+  .card h3 .num {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 26px; height: 26px; border-radius: 50%;
+    background: var(--accent-soft); color: var(--accent);
+    font-size: 14px; margin-right: 10px; vertical-align: middle;
+  }
+  .card p, .card li { font-size: 15px; }
+  .card ul, .card ol { padding-left: 22px; margin: 8px 0; }
+  .en-block {
+    margin-top: 10px; padding: 10px 14px; background: var(--en-soft);
+    border-left: 3px solid var(--en); border-radius: 6px; color: #14532d;
+    font-size: 14px; font-family: Georgia, "Times New Roman", serif;
+  }
+  mark { background: #fff3c4; padding: 0 4px; border-radius: 4px; }
+  .formula { font-family: "SF Mono", Consolas, monospace; background: #f1f3f9; padding: 1px 7px; border-radius: 5px; font-size: 14px; }
+  .big-formula {
+    font-family: "SF Mono", Consolas, monospace; background: #f1f3f9;
+    border: 1px solid var(--border); border-radius: 8px;
+    padding: 10px 16px; margin: 10px 0; font-size: 15.5px; text-align: center;
+  }
+  .chart-caption { font-size: 12.5px; color: var(--muted); text-align: center; margin-top: 4px; }
+  .vs { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 10px; }
+  .vs .col { border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; }
+  .vs .col h4 { font-size: 14.5px; margin-bottom: 6px; }
+  .vs .col.left  { background: #f2f5ff; }
+  .vs .col.right { background: #fff8ee; }
+  .vs .col p { font-size: 13.5px; }
+  @media (max-width: 620px) { .vs { grid-template-columns: 1fr; } }
+  .controls { display: flex; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; }
+  .controls button {
+    border: 1px solid var(--border); background: var(--card); padding: 7px 16px;
+    border-radius: 999px; font-size: 13.5px; cursor: pointer; color: var(--ink); transition: all .15s;
+  }
+  .controls button:hover { border-color: var(--accent); color: var(--accent); }
+  .controls button.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .glossary { display: grid; grid-template-columns: repeat(auto-fill, minmax(255px, 1fr)); gap: 12px; }
+  .term {
+    background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+    padding: 16px 18px; cursor: pointer; transition: transform .12s, box-shadow .12s; user-select: none;
+  }
+  .term:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(30,40,90,.08); }
+  .term .word { font-weight: 700; font-size: 15px; color: var(--accent); }
+  .term .zh { font-size: 14px; margin-top: 2px; }
+  .term .def { font-size: 13.5px; color: var(--muted); margin-top: 8px; border-top: 1px dashed var(--border); padding-top: 8px; }
+  .quiz-mode .term .def, .quiz-mode .term .zh { display: none; }
+  .quiz-mode .term.revealed .def, .quiz-mode .term.revealed .zh { display: block; }
+  .quiz-hint { font-size: 13px; color: var(--muted); margin-bottom: 12px; display: none; }
+  .quiz-mode-on .quiz-hint { display: block; }
+  footer { text-align: center; color: var(--muted); font-size: 12.5px; margin-top: 48px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="hero">
+    <div class="course">Andrew Ng · 深度学习专项课程 · Course 1 Week 2 Lesson 7</div>
+    <h1>计算图</h1>
+    <div class="en-title">Computation Graph (C1W2L07)</div>
+    <div style="margin-top:10px"><a href="https://www.youtube.com/watch?v=hCP1vGoCdYU" target="_blank">▶ 观看视频 Watch on YouTube</a></div>
+  </header>
+
+  <h2 class="section">核心知识点 <span class="en">Key Points</span></h2>
+
+  <div class="card">
+    <h3><span class="num">1</span>为什么需要计算图 · Why a Computation Graph</h3>
+    <p>神经网络的计算分两步:<mark>前向传播 (forward pass)</mark> 算出输出/成本,<mark>反向传播 (backward pass)</mark> 算出梯度。<b>计算图</b>把复杂计算拆成一步步小运算,能清楚解释这两个过程为什么这样组织。</p>
+    <div class="en-block">A neural network's computation is organized as a forward pass (compute the cost) followed by a backward pass (compute gradients). The computation graph explains why.</div>
+  </div>
+
+  <div class="card">
+    <h3><span class="num">2</span>例子:J = 3(a + bc) · The Running Example</h3>
+    <p>拆成三步:<span class="formula">u = bc</span> → <span class="formula">v = a + u</span> → <span class="formula">J = 3v</span></p>
+    <svg viewBox="0 0 660 230" width="100%" xmlns="http://www.w3.org/2000/svg">
+      <!-- inputs -->
+      <rect x="20" y="20" width="70" height="40" rx="8" fill="#eef1fe" stroke="#4f6df5"/>
+      <text x="55" y="45" font-size="14" text-anchor="middle" fill="#3b4fc0">a = 5</text>
+      <rect x="20" y="90" width="70" height="40" rx="8" fill="#eef1fe" stroke="#4f6df5"/>
+      <text x="55" y="115" font-size="14" text-anchor="middle" fill="#3b4fc0">b = 3</text>
+      <rect x="20" y="160" width="70" height="40" rx="8" fill="#eef1fe" stroke="#4f6df5"/>
+      <text x="55" y="185" font-size="14" text-anchor="middle" fill="#3b4fc0">c = 2</text>
+      <!-- u node -->
+      <rect x="180" y="125" width="110" height="46" rx="10" fill="#fff" stroke="#c2620e" stroke-width="2"/>
+      <text x="235" y="145" font-size="13.5" text-anchor="middle" fill="#c2620e">u = bc</text>
+      <text x="235" y="163" font-size="12.5" text-anchor="middle" fill="#6b7280">= 6</text>
+      <!-- v node -->
+      <rect x="360" y="70" width="120" height="46" rx="10" fill="#fff" stroke="#0e9f6e" stroke-width="2"/>
+      <text x="420" y="90" font-size="13.5" text-anchor="middle" fill="#0e7a55">v = a + u</text>
+      <text x="420" y="108" font-size="12.5" text-anchor="middle" fill="#6b7280">= 11</text>
+      <!-- J node -->
+      <rect x="540" y="70" width="100" height="46" rx="10" fill="#4f6df5"/>
+      <text x="590" y="90" font-size="13.5" text-anchor="middle" fill="#fff">J = 3v</text>
+      <text x="590" y="108" font-size="12.5" text-anchor="middle" fill="#dbe3ff">= 33</text>
+      <!-- edges -->
+      <line x1="90" y1="110" x2="180" y2="140" stroke="#9aa3b5" stroke-width="2"/>
+      <line x1="90" y1="180" x2="180" y2="158" stroke="#9aa3b5" stroke-width="2"/>
+      <line x1="290" y1="145" x2="360" y2="100" stroke="#9aa3b5" stroke-width="2"/>
+      <line x1="90" y1="40" x2="360" y2="86" stroke="#9aa3b5" stroke-width="2"/>
+      <line x1="480" y1="93" x2="540" y2="93" stroke="#9aa3b5" stroke-width="2"/>
+      <polygon points="540,93 531,88 531,98" fill="#9aa3b5"/>
+    </svg>
+    <div class="chart-caption">代入 a=5, b=3, c=2:u = 6 → v = 11 → J = 33</div>
+    <div class="en-block">Break J(a,b,c) = 3(a + bc) into three steps: u = bc, then v = a + u, then J = 3v. With a=5, b=3, c=2 we get u=6, v=11, J=33.</div>
+  </div>
+
+  <div class="card">
+    <h3><span class="num">3</span>什么时候计算图有用 · When It's Useful</h3>
+    <p>当有一个<mark>特别关心的输出变量</mark>需要优化时最有用——比如逻辑回归里要最小化的<b>成本函数 J</b>。J 就是图最右端的输出节点。</p>
+    <div class="en-block">The graph is most useful when there is one distinguished output variable you want to optimize — like the cost function J in logistic regression.</div>
+  </div>
+
+  <div class="card">
+    <h3><span class="num">4</span>两个方向 · Two Directions ⭐</h3>
+    <div class="vs">
+      <div class="col left">
+        <h4>→ 从左到右 Forward</h4>
+        <p>前向计算,得到 <mark>J 的值</mark></p>
+      </div>
+      <div class="col right">
+        <h4>← 从右到左 Backward</h4>
+        <p>反向计算,得到<mark>导数/梯度</mark>(下一讲)</p>
+      </div>
+    </div>
+    <div class="en-block">A left-to-right pass computes the value of J; a right-to-left pass is the natural way to compute derivatives — next lecture.</div>
+  </div>
+
+  <h2 class="section">名词卡片 <span class="en">Glossary · 点击「自测模式」可当抽认卡用</span></h2>
+
+  <div class="controls">
+    <button id="btnStudy" class="active" onclick="setMode(false)">📖 学习模式</button>
+    <button id="btnQuiz" onclick="setMode(true)">🎯 自测模式</button>
+  </div>
+  <p class="quiz-hint">自测模式:先回忆中文含义,再点击卡片查看答案。</p>
+
+  <div class="glossary" id="glossary">
+    <div class="term"><div class="word">Computation Graph</div><div class="zh">计算图</div><div class="def">把复杂计算拆成一步步小运算并连成的图</div></div>
+    <div class="term"><div class="word">Forward Pass / Propagation</div><div class="zh">前向传播</div><div class="def">从左到右计算,得到输出(如成本 J)</div></div>
+    <div class="term"><div class="word">Backward Pass / Propagation</div><div class="zh">反向传播</div><div class="def">从右到左计算,得到导数/梯度</div></div>
+    <div class="term"><div class="word">Node</div><div class="zh">节点</div><div class="def">图中的一步运算(如 u = bc)</div></div>
+    <div class="term"><div class="word">Intermediate Variable</div><div class="zh">中间变量</div><div class="def">拆步骤时引入的量(如 u、v)</div></div>
+    <div class="term"><div class="word">Output Variable (J)</div><div class="zh">输出变量</div><div class="def">图最右端、我们想优化的量(如成本函数)</div></div>
+    <div class="term"><div class="word">Left-to-right</div><div class="zh">从左到右</div><div class="def">前向传播的计算方向</div></div>
+    <div class="term"><div class="word">Right-to-left</div><div class="zh">从右到左</div><div class="def">反向传播(求导)的计算方向</div></div>
+  </div>
+
+  <footer>C1W2L07 复习笔记 · 中英双语版</footer>
+</div>
+
+<script>
+  const glossary = document.getElementById('glossary');
+  const body = document.body;
+  function setMode(quiz) {
+    glossary.classList.toggle('quiz-mode', quiz);
+    body.classList.toggle('quiz-mode-on', quiz);
+    document.getElementById('btnQuiz').classList.toggle('active', quiz);
+    document.getElementById('btnStudy').classList.toggle('active', !quiz);
+    document.querySelectorAll('.term').forEach(t => t.classList.remove('revealed'));
+  }
+  document.querySelectorAll('.term').forEach(t => {
+    t.addEventListener('click', () => {
+      if (glossary.classList.contains('quiz-mode')) t.classList.toggle('revealed');
+    });
+  });
+</script>
+</body>
+</html>
