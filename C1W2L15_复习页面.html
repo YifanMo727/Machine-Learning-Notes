@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>C1W2L15 · Python 中的广播 | Broadcasting in Python</title>
+<style>
+  :root {
+    --bg: #f6f7fb; --card: #ffffff; --ink: #1f2430; --muted: #6b7280;
+    --accent: #4f6df5; --accent-soft: #eef1fe;
+    --en: #0e9f6e; --en-soft: #e7f7f1;
+    --border: #e5e8f0; --radius: 14px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", -apple-system, "Segoe UI", sans-serif;
+    background: var(--bg); color: var(--ink); line-height: 1.75; padding: 32px 16px 64px;
+  }
+  .wrap { max-width: 860px; margin: 0 auto; }
+  header.hero {
+    background: linear-gradient(135deg, #4f6df5 0%, #7c5cf0 100%);
+    color: #fff; border-radius: var(--radius); padding: 36px 32px; margin-bottom: 28px;
+  }
+  .hero .course { font-size: 13px; opacity: .85; letter-spacing: .5px; margin-bottom: 8px; }
+  .hero h1 { font-size: 28px; line-height: 1.35; }
+  .hero .en-title { font-size: 17px; font-weight: 400; opacity: .9; margin-top: 6px; }
+  .hero a { color: #dbe3ff; font-size: 13px; }
+  .hero .note { margin-top: 12px; font-size: 13px; background: rgba(255,255,255,.15); padding: 6px 14px; border-radius: 8px; display: inline-block; }
+  h2.section { font-size: 20px; margin: 36px 0 16px; padding-left: 12px; border-left: 4px solid var(--accent); }
+  h2.section .en { color: var(--muted); font-weight: 500; font-size: 15px; margin-left: 8px; }
+  .card {
+    background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 22px 24px; margin-bottom: 16px; box-shadow: 0 1px 3px rgba(30, 40, 90, .05);
+  }
+  .card h3 { font-size: 16.5px; margin-bottom: 10px; }
+  .card h3 .num {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 26px; height: 26px; border-radius: 50%;
+    background: var(--accent-soft); color: var(--accent);
+    font-size: 14px; margin-right: 10px; vertical-align: middle;
+  }
+  .card p, .card li { font-size: 15px; }
+  .card ul { padding-left: 22px; margin: 8px 0; }
+  .en-block {
+    margin-top: 10px; padding: 10px 14px; background: var(--en-soft);
+    border-left: 3px solid var(--en); border-radius: 6px; color: #14532d;
+    font-size: 14px; font-family: Georgia, "Times New Roman", serif;
+  }
+  mark { background: #fff3c4; padding: 0 4px; border-radius: 4px; }
+  .formula { font-family: "SF Mono", Consolas, monospace; background: #f1f3f9; padding: 1px 7px; border-radius: 5px; font-size: 14px; }
+  .code-block {
+    font-family: "SF Mono", Consolas, monospace; background: #1f2430; color: #e6e9f2;
+    border-radius: 10px; padding: 16px 18px; margin: 12px 0;
+    font-size: 13.5px; line-height: 1.85; overflow-x: auto; white-space: pre;
+  }
+  .code-block .c { color: #8a93a8; }
+  .code-block .hl { color: #ffd75e; font-weight: 700; }
+  table.nutri { width: 100%; border-collapse: collapse; font-size: 13px; margin: 12px 0 4px; }
+  table.nutri th, table.nutri td { border: 1px solid var(--border); padding: 7px 9px; text-align: center; }
+  table.nutri th { background: var(--accent-soft); color: #3b4fc0; }
+  table.nutri td.hl-row { background: #fff3c4; font-weight: 700; }
+  .chart-caption { font-size: 12.5px; color: var(--muted); text-align: center; margin-top: 4px; }
+  .warn-block {
+    margin-top: 10px; padding: 10px 14px; background: #fdeaea;
+    border-left: 3px solid #c0392b; border-radius: 6px; color: #7a1f1f; font-size: 14px;
+  }
+  .controls { display: flex; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; }
+  .controls button {
+    border: 1px solid var(--border); background: var(--card); padding: 7px 16px;
+    border-radius: 999px; font-size: 13.5px; cursor: pointer; color: var(--ink); transition: all .15s;
+  }
+  .controls button:hover { border-color: var(--accent); color: var(--accent); }
+  .controls button.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .glossary { display: grid; grid-template-columns: repeat(auto-fill, minmax(255px, 1fr)); gap: 12px; }
+  .term {
+    background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+    padding: 16px 18px; cursor: pointer; transition: transform .12s, box-shadow .12s; user-select: none;
+  }
+  .term:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(30,40,90,.08); }
+  .term .word { font-weight: 700; font-size: 15px; color: var(--accent); }
+  .term .zh { font-size: 14px; margin-top: 2px; }
+  .term .def { font-size: 13.5px; color: var(--muted); margin-top: 8px; border-top: 1px dashed var(--border); padding-top: 8px; }
+  .quiz-mode .term .def, .quiz-mode .term .zh { display: none; }
+  .quiz-mode .term.revealed .def, .quiz-mode .term.revealed .zh { display: block; }
+  .quiz-hint { font-size: 13px; color: var(--muted); margin-bottom: 12px; display: none; }
+  .quiz-mode-on .quiz-hint { display: block; }
+  footer { text-align: center; color: var(--muted); font-size: 12.5px; margin-top: 48px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="hero">
+    <div class="course">Andrew Ng · 深度学习专项课程 · Course 1 Week 2 Lesson 15</div>
+    <h1>Python 中的广播</h1>
+    <div class="en-title">Broadcasting in Python (C1W2L15)</div>
+    <div style="margin-top:10px"><a href="https://www.youtube.com/watch?v=tKcLaGdvabM" target="_blank">▶ 观看视频 Watch on YouTube</a></div>
+    <div class="note">🔓 补完 L13 的伏笔:b 是怎么被自动扩展的</div>
+  </header>
+
+  <h2 class="section">核心知识点 <span class="en">Key Points</span></h2>
+
+  <div class="card">
+    <h3><span class="num">1</span>例子:100 克营养成分表 · The Example</h3>
+    <p>一张表:行是脂肪/蛋白质/碳水,列是苹果/牛肉/鸡蛋/土豆。目标:算出<mark>每种食物中每种营养的热量占比</mark>,不用 for 循环。</p>
+    <table class="nutri">
+      <tr><th></th><th>苹果</th><th>牛肉</th><th>鸡蛋</th><th>土豆</th></tr>
+      <tr><td>脂肪</td><td>1.0</td><td>104.0</td><td>1.8</td><td>0</td></tr>
+      <tr><td>蛋白质</td><td>1.2</td><td>135.0</td><td>13.4</td><td>7.7</td></tr>
+      <tr><td>碳水</td><td>59.0</td><td>0</td><td>1.1</td><td>7.7</td></tr>
+      <tr><td class="hl-row">总热量</td><td class="hl-row">59+1.2+1</td><td class="hl-row">…</td><td class="hl-row">…</td><td class="hl-row">…</td></tr>
+    </table>
+    <div class="en-block">Goal: compute the percentage of calories from each nutrient, for each food, without any for loop.</div>
+  </div>
+
+  <div class="card">
+    <h3><span class="num">2</span>广播的操作 · The Broadcasting Operation</h3>
+    <div class="code-block">cal = A.sum(axis=0)          <span class="c"># 按列求和 → 1×4(每种食物的总热量)</span>
+<span class="hl">percentage = 100 * A / cal.reshape(1, 4)</span>   <span class="c"># 4×3 除以 1×4</span></div>
+    <ul>
+      <li><span class="formula">axis=0</span>:沿<b>列方向</b>(竖着)求和</li>
+      <li><span class="formula">axis=1</span>:沿<b>行方向</b>(横着)求和</li>
+    </ul>
+    <p>cal 是 (1,4),A 是 (3,4),形状不同却能直接相除——这就是<mark>广播</mark>在起作用。</p>
+    <div class="en-block">axis=0 sums vertically down each column; axis=1 sums horizontally. Even though cal (1,4) and A (3,4) differ in shape, Python lets you divide them directly — broadcasting.</div>
+  </div>
+
+  <div class="card">
+    <h3><span class="num">3</span>广播的通用规则 · The General Principle ⭐</h3>
+    <svg viewBox="0 0 660 220" width="100%" xmlns="http://www.w3.org/2000/svg">
+      <!-- (m,n) matrix -->
+      <rect x="30" y="30" width="150" height="110" rx="8" fill="#eef1fe" stroke="#4f6df5" stroke-width="2"/>
+      <text x="105" y="90" font-size="16" text-anchor="middle" fill="#3b4fc0">(m, n)</text>
+      <text x="105" y="160" font-size="12" text-anchor="middle" fill="#6b7280">矩阵</text>
+      <text x="200" y="90" font-size="18" fill="#6b7280">±×÷</text>
+      <!-- (1,n) row vector -->
+      <rect x="250" y="60" width="150" height="34" rx="6" fill="#fff3c4" stroke="#e5b800" stroke-width="2"/>
+      <text x="325" y="82" font-size="14" text-anchor="middle" fill="#8a6d00">(1, n)</text>
+      <text x="325" y="112" font-size="12" text-anchor="middle" fill="#6b7280">行向量 → 复制 m 次</text>
+      <text x="430" y="85" font-size="16" fill="#6b7280">=</text>
+      <!-- result -->
+      <rect x="460" y="30" width="150" height="110" rx="8" fill="#e7f7f1" stroke="#0e9f6e" stroke-width="2"/>
+      <text x="535" y="90" font-size="16" text-anchor="middle" fill="#0e7a55">(m, n)</text>
+      <text x="535" y="160" font-size="12" text-anchor="middle" fill="#6b7280">逐元素运算结果</text>
+    </svg>
+    <p><mark>(m,n) 矩阵与 (1,n) 行向量运算</mark>:行向量被复制 m 次匹配行数。<mark>(m,n) 矩阵与 (m,1) 列向量运算</mark>:列向量被复制 n 次匹配列数。</p>
+    <p>更一般地:只要两数组在某维度上一个是 1、另一个是 m/n,较小的那个就被<b>复制扩展</b>到匹配大小。</p>
+    <p>回顾 L13:<span class="formula">Z = np.dot(w.T, X) + b</span> —— b 是标量(1×1),被扩展成 1×m 再和 Z 相加,原理完全相同。</p>
+    <div class="en-block">If one array has size 1 along a dimension and the other has size m or n, the size-1 array is virtually copied to match. This is exactly what happened with scalar b in Z = wᵀX + b back in L13.</div>
+  </div>
+
+  <div class="card">
+    <h3><span class="num">4</span>优点与代价 · Benefit and Caution</h3>
+    <p>✅ <b>优点</b>:代码极其简洁,一行完成本该需要循环的运算,底层执行同样很快。</p>
+    <div class="warn-block">⚠️ <b>代价</b>:广播的"灵活"有时会掩盖 bug——比如不小心用了形状 (n,) 的<mark>秩为 1 的数组 (rank 1 array)</mark>,导致广播出乎意料的结果。下一讲教怎么避免。</div>
+    <div class="en-block">Broadcasting's flexibility is powerful but can silently produce unexpected shapes and bugs — especially with rank-1 arrays. Covered next lecture.</div>
+  </div>
+
+  <h2 class="section">名词卡片 <span class="en">Glossary · 点击「自测模式」可当抽认卡用</span></h2>
+
+  <div class="controls">
+    <button id="btnStudy" class="active" onclick="setMode(false)">📖 学习模式</button>
+    <button id="btnQuiz" onclick="setMode(true)">🎯 自测模式</button>
+  </div>
+  <p class="quiz-hint">自测模式:先回忆中文含义,再点击卡片查看答案。</p>
+
+  <div class="glossary" id="glossary">
+    <div class="term"><div class="word">Broadcasting</div><div class="zh">广播</div><div class="def">形状不同的数组运算时,自动复制扩展较小一方以匹配形状</div></div>
+    <div class="term"><div class="word">axis=0</div><div class="zh">按列方向(竖着)</div><div class="def">沿第一维(行)方向聚合,如 A.sum(axis=0)</div></div>
+    <div class="term"><div class="word">axis=1</div><div class="zh">按行方向(横着)</div><div class="def">沿第二维(列)方向聚合</div></div>
+    <div class="term"><div class="word">.reshape(1, 4)</div><div class="zh">重塑形状</div><div class="def">显式指定数组形状,常用于确保广播按预期工作</div></div>
+    <div class="term"><div class="word">A.sum(axis=...)</div><div class="zh">求和函数</div><div class="def">numpy 沿指定维度求和</div></div>
+    <div class="term"><div class="word">(m,n) vs (1,n)</div><div class="zh">广播场景一</div><div class="def">行向量被复制 m 次匹配矩阵行数</div></div>
+    <div class="term"><div class="word">(m,n) vs (m,1)</div><div class="zh">广播场景二</div><div class="def">列向量被复制 n 次匹配矩阵列数</div></div>
+    <div class="term"><div class="word">Rank 1 Array</div><div class="zh">秩为 1 的数组</div><div class="def">形状如 (n,) 的数组,易在广播时产生意外结果(下一讲详解)</div></div>
+  </div>
+
+  <footer>C1W2L15 复习笔记 · 中英双语版</footer>
+</div>
+
+<script>
+  const glossary = document.getElementById('glossary');
+  const body = document.body;
+  function setMode(quiz) {
+    glossary.classList.toggle('quiz-mode', quiz);
+    body.classList.toggle('quiz-mode-on', quiz);
+    document.getElementById('btnQuiz').classList.toggle('active', quiz);
+    document.getElementById('btnStudy').classList.toggle('active', !quiz);
+    document.querySelectorAll('.term').forEach(t => t.classList.remove('revealed'));
+  }
+  document.querySelectorAll('.term').forEach(t => {
+    t.addEventListener('click', () => {
+      if (glossary.classList.contains('quiz-mode')) t.classList.toggle('revealed');
+    });
+  });
+</script>
+</body>
+</html>

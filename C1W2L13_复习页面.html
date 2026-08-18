@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>C1W2L13 · 向量化逻辑回归 | Vectorizing Logistic Regression</title>
+<style>
+  :root {
+    --bg: #f6f7fb; --card: #ffffff; --ink: #1f2430; --muted: #6b7280;
+    --accent: #4f6df5; --accent-soft: #eef1fe;
+    --en: #0e9f6e; --en-soft: #e7f7f1;
+    --border: #e5e8f0; --radius: 14px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", -apple-system, "Segoe UI", sans-serif;
+    background: var(--bg); color: var(--ink); line-height: 1.75; padding: 32px 16px 64px;
+  }
+  .wrap { max-width: 860px; margin: 0 auto; }
+  header.hero {
+    background: linear-gradient(135deg, #4f6df5 0%, #7c5cf0 100%);
+    color: #fff; border-radius: var(--radius); padding: 36px 32px; margin-bottom: 28px;
+  }
+  .hero .course { font-size: 13px; opacity: .85; letter-spacing: .5px; margin-bottom: 8px; }
+  .hero h1 { font-size: 28px; line-height: 1.35; }
+  .hero .en-title { font-size: 17px; font-weight: 400; opacity: .9; margin-top: 6px; }
+  .hero a { color: #dbe3ff; font-size: 13px; }
+  .hero .note { margin-top: 12px; font-size: 13px; background: rgba(255,255,255,.15); padding: 6px 14px; border-radius: 8px; display: inline-block; }
+  h2.section { font-size: 20px; margin: 36px 0 16px; padding-left: 12px; border-left: 4px solid var(--accent); }
+  h2.section .en { color: var(--muted); font-weight: 500; font-size: 15px; margin-left: 8px; }
+  .card {
+    background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 22px 24px; margin-bottom: 16px; box-shadow: 0 1px 3px rgba(30, 40, 90, .05);
+  }
+  .card h3 { font-size: 16.5px; margin-bottom: 10px; }
+  .card h3 .num {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 26px; height: 26px; border-radius: 50%;
+    background: var(--accent-soft); color: var(--accent);
+    font-size: 14px; margin-right: 10px; vertical-align: middle;
+  }
+  .card p, .card li { font-size: 15px; }
+  .card ul { padding-left: 22px; margin: 8px 0; }
+  .en-block {
+    margin-top: 10px; padding: 10px 14px; background: var(--en-soft);
+    border-left: 3px solid var(--en); border-radius: 6px; color: #14532d;
+    font-size: 14px; font-family: Georgia, "Times New Roman", serif;
+  }
+  mark { background: #fff3c4; padding: 0 4px; border-radius: 4px; }
+  .formula { font-family: "SF Mono", Consolas, monospace; background: #f1f3f9; padding: 1px 7px; border-radius: 5px; font-size: 14px; }
+  .big-formula {
+    font-family: "SF Mono", Consolas, monospace; background: #f1f3f9;
+    border: 1px solid var(--border); border-radius: 8px;
+    padding: 10px 16px; margin: 10px 0; font-size: 15.5px; text-align: center; overflow-x: auto;
+  }
+  .code-block {
+    font-family: "SF Mono", Consolas, monospace; background: #1f2430; color: #e6e9f2;
+    border-radius: 10px; padding: 16px 18px; margin: 12px 0;
+    font-size: 13.5px; line-height: 1.8; overflow-x: auto; white-space: pre;
+  }
+  .code-block .c { color: #8a93a8; }
+  .code-block .hl { color: #ffd75e; font-weight: 700; }
+  .chart-caption { font-size: 12.5px; color: var(--muted); text-align: center; margin-top: 4px; }
+  .controls { display: flex; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; }
+  .controls button {
+    border: 1px solid var(--border); background: var(--card); padding: 7px 16px;
+    border-radius: 999px; font-size: 13.5px; cursor: pointer; color: var(--ink); transition: all .15s;
+  }
+  .controls button:hover { border-color: var(--accent); color: var(--accent); }
+  .controls button.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .glossary { display: grid; grid-template-columns: repeat(auto-fill, minmax(255px, 1fr)); gap: 12px; }
+  .term {
+    background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+    padding: 16px 18px; cursor: pointer; transition: transform .12s, box-shadow .12s; user-select: none;
+  }
+  .term:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(30,40,90,.08); }
+  .term .word { font-weight: 700; font-size: 15px; color: var(--accent); }
+  .term .zh { font-size: 14px; margin-top: 2px; }
+  .term .def { font-size: 13.5px; color: var(--muted); margin-top: 8px; border-top: 1px dashed var(--border); padding-top: 8px; }
+  .quiz-mode .term .def, .quiz-mode .term .zh { display: none; }
+  .quiz-mode .term.revealed .def, .quiz-mode .term.revealed .zh { display: block; }
+  .quiz-hint { font-size: 13px; color: var(--muted); margin-bottom: 12px; display: none; }
+  .quiz-mode-on .quiz-hint { display: block; }
+  footer { text-align: center; color: var(--muted); font-size: 12.5px; margin-top: 48px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="hero">
+    <div class="course">Andrew Ng · 深度学习专项课程 · Course 1 Week 2 Lesson 13</div>
+    <h1>向量化逻辑回归</h1>
+    <div class="en-title">Vectorizing Logistic Regression (C1W2L13)</div>
+    <div style="margin-top:10px"><a href="https://www.youtube.com/watch?v=okpqeEUdEkY" target="_blank">▶ 观看视频 Watch on YouTube</a></div>
+    <div class="note">⭐ 消灭样本循环:一行代码算完 m 个样本的前向传播</div>
+  </header>
+
+  <h2 class="section">核心知识点 <span class="en">Key Points</span></h2>
+
+  <div class="card">
+    <h3><span class="num">1</span>目标 · The Goal</h3>
+    <p>前向传播要对每个样本算 <span class="formula">z⁽ⁱ⁾ = wᵀx⁽ⁱ⁾ + b</span> 和 <span class="formula">a⁽ⁱ⁾ = σ(z⁽ⁱ⁾)</span>,共 m 次。本讲目标:<mark>不用任何 for 循环,一次算完所有样本</mark>。</p>
+    <div class="en-block">Forward propagation needs z(i) and a(i) for every example. Goal: compute all m of them without a single for loop.</div>
+  </div>
+
+  <div class="card">
+    <h3><span class="num">2</span>关键:利用 X 的列结构 · Use the Columns of X ⭐</h3>
+    <p>X 形状 (n_x, m),<b>每列一个样本</b>。把所有 z 排成一行 Z(1×m),则:</p>
+    <div class="big-formula">Z = wᵀX + [b, b, …, b]</div>
+    <svg viewBox="0 0 660 210" width="100%" xmlns="http://www.w3.org/2000/svg">
+      <!-- w^T row vector -->
+      <rect x="20" y="80" width="120" height="34" rx="6" fill="none" stroke="#c2620e" stroke-width="2"/>
+      <text x="80" y="102" font-size="13" text-anchor="middle" fill="#c2620e">wᵀ (1×n_x)</text>
+      <text x="152" y="102" font-size="16" fill="#6b7280">×</text>
+      <!-- X matrix with columns -->
+      <rect x="172" y="30" width="180" height="140" rx="8" fill="none" stroke="#4f6df5" stroke-width="2"/>
+      <line x1="217" y1="38" x2="217" y2="162" stroke="#9aa3b5" stroke-width="1.5" stroke-dasharray="3 4"/>
+      <line x1="262" y1="38" x2="262" y2="162" stroke="#9aa3b5" stroke-width="1.5" stroke-dasharray="3 4"/>
+      <line x1="307" y1="38" x2="307" y2="162" stroke="#9aa3b5" stroke-width="1.5" stroke-dasharray="3 4"/>
+      <text x="194" y="105" font-size="12" text-anchor="middle" fill="#3b4fc0">x⁽¹⁾</text>
+      <text x="239" y="105" font-size="12" text-anchor="middle" fill="#3b4fc0">x⁽²⁾</text>
+      <text x="284" y="105" font-size="12" text-anchor="middle" fill="#3b4fc0">…</text>
+      <text x="329" y="105" font-size="12" text-anchor="middle" fill="#3b4fc0">x⁽ᵐ⁾</text>
+      <text x="262" y="190" font-size="12" text-anchor="middle" fill="#6b7280">X (n_x × m)</text>
+      <text x="370" y="102" font-size="16" fill="#6b7280">=</text>
+      <!-- Z row -->
+      <rect x="392" y="80" width="248" height="34" rx="6" fill="#eef1fe" stroke="#4f6df5" stroke-width="2"/>
+      <text x="428" y="102" font-size="12" text-anchor="middle" fill="#3b4fc0">wᵀx⁽¹⁾</text>
+      <text x="488" y="102" font-size="12" text-anchor="middle" fill="#3b4fc0">wᵀx⁽²⁾</text>
+      <text x="545" y="102" font-size="12" text-anchor="middle" fill="#3b4fc0">…</text>
+      <text x="600" y="102" font-size="12" text-anchor="middle" fill="#3b4fc0">wᵀx⁽ᵐ⁾</text>
+      <text x="516" y="140" font-size="12" text-anchor="middle" fill="#6b7280">wᵀX (1 × m) → 再整体 + b 得 Z</text>
+    </svg>
+    <div class="chart-caption">矩阵乘法自动拿 wᵀ 对 X 的每一列做内积——这就是当初"按列堆叠"的回报</div>
+    <div class="en-block">Matrix multiplication automatically takes the inner product of w with every column of X — this is exactly why we stacked examples as columns.</div>
+  </div>
+
+  <div class="card">
+    <h3><span class="num">3</span>numpy 实现与广播 · The numpy Line &amp; Broadcasting</h3>
+    <div class="code-block"><span class="hl">Z = np.dot(w.T, X) + b</span></div>
+    <p>这里 b 只是<b>一个实数</b>,numpy 会自动把它扩展成 [b, b, …, b] 的 1×m 行向量再相加——这个机制叫<mark>广播 (broadcasting)</mark>,后面有专门一讲。</p>
+    <div class="en-block">b is just a real number; Python automatically expands it into a 1×m row vector when adding. This is called broadcasting — more on it in a later lecture.</div>
+  </div>
+
+  <div class="card">
+    <h3><span class="num">4</span>激活值也一次算完 · All Activations at Once</h3>
+    <p>所有 a 排成一行 A(1×m),σ 作为<b>逐元素函数</b>同时作用于 Z 的每个元素:</p>
+    <div class="big-formula">A = [a⁽¹⁾, a⁽²⁾, …, a⁽ᵐ⁾] = σ(Z)</div>
+    <p>至此,m 个样本的全部预测值:<mark>两行代码,零循环</mark>:</p>
+    <div class="code-block">Z = np.dot(w.T, X) + b
+A = sigma(Z)</div>
+    <div class="en-block">Apply sigmoid elementwise to all of Z at once: A = σ(Z). All m predictions in two lines, zero loops.</div>
+  </div>
+
+  <div class="card">
+    <h3><span class="num">5</span>下一步 · What's Next</h3>
+    <p>前向传播已向量化;下一讲把<b>反向传播(梯度计算)</b>也向量化,彻底告别 for 循环。</p>
+    <div class="en-block">Forward propagation is now vectorized; next lecture vectorizes the gradient computation too.</div>
+  </div>
+
+  <h2 class="section">名词卡片 <span class="en">Glossary · 点击「自测模式」可当抽认卡用</span></h2>
+
+  <div class="controls">
+    <button id="btnStudy" class="active" onclick="setMode(false)">📖 学习模式</button>
+    <button id="btnQuiz" onclick="setMode(true)">🎯 自测模式</button>
+  </div>
+  <p class="quiz-hint">自测模式:先回忆中文含义,再点击卡片查看答案。</p>
+
+  <div class="glossary" id="glossary">
+    <div class="term"><div class="word">Z (capital)</div><div class="zh">大写 Z</div><div class="def">所有样本的 z 排成的 1×m 行向量</div></div>
+    <div class="term"><div class="word">A (capital)</div><div class="zh">大写 A</div><div class="def">所有样本的激活值排成的 1×m 行向量</div></div>
+    <div class="term"><div class="word">Z = wᵀX + b</div><div class="zh">向量化前向公式</div><div class="def">矩阵乘法自动对 X 每列做内积</div></div>
+    <div class="term"><div class="word">np.dot(w.T, X)</div><div class="zh">numpy 实现</div><div class="def">wᵀX 的代码写法</div></div>
+    <div class="term"><div class="word">Broadcasting</div><div class="zh">广播</div><div class="def">numpy 自动把实数 b 扩展成向量参与运算的机制</div></div>
+    <div class="term"><div class="word">Vectorized Sigmoid</div><div class="zh">向量化 sigmoid</div><div class="def">σ 逐元素作用于整个 Z,得到 A</div></div>
+    <div class="term"><div class="word">Forward Propagation (vectorized)</div><div class="zh">向量化前向传播</div><div class="def">两行代码算完全部样本的预测</div></div>
+  </div>
+
+  <footer>C1W2L13 复习笔记 · 中英双语版</footer>
+</div>
+
+<script>
+  const glossary = document.getElementById('glossary');
+  const body = document.body;
+  function setMode(quiz) {
+    glossary.classList.toggle('quiz-mode', quiz);
+    body.classList.toggle('quiz-mode-on', quiz);
+    document.getElementById('btnQuiz').classList.toggle('active', quiz);
+    document.getElementById('btnStudy').classList.toggle('active', !quiz);
+    document.querySelectorAll('.term').forEach(t => t.classList.remove('revealed'));
+  }
+  document.querySelectorAll('.term').forEach(t => {
+    t.addEventListener('click', () => {
+      if (glossary.classList.contains('quiz-mode')) t.classList.toggle('revealed');
+    });
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>C1W2L16 · 关于 Python/Numpy 向量的说明 | A Note on Python/Numpy Vectors</title>
+<style>
+  :root {
+    --bg: #f6f7fb; --card: #ffffff; --ink: #1f2430; --muted: #6b7280;
+    --accent: #4f6df5; --accent-soft: #eef1fe;
+    --en: #0e9f6e; --en-soft: #e7f7f1;
+    --border: #e5e8f0; --radius: 14px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", -apple-system, "Segoe UI", sans-serif;
+    background: var(--bg); color: var(--ink); line-height: 1.75; padding: 32px 16px 64px;
+  }
+  .wrap { max-width: 860px; margin: 0 auto; }
+  header.hero {
+    background: linear-gradient(135deg, #4f6df5 0%, #7c5cf0 100%);
+    color: #fff; border-radius: var(--radius); padding: 36px 32px; margin-bottom: 28px;
+  }
+  .hero .course { font-size: 13px; opacity: .85; letter-spacing: .5px; margin-bottom: 8px; }
+  .hero h1 { font-size: 28px; line-height: 1.35; }
+  .hero .en-title { font-size: 17px; font-weight: 400; opacity: .9; margin-top: 6px; }
+  .hero a { color: #dbe3ff; font-size: 13px; }
+  .hero .note { margin-top: 12px; font-size: 13px; background: rgba(255,255,255,.15); padding: 6px 14px; border-radius: 8px; display: inline-block; }
+  h2.section { font-size: 20px; margin: 36px 0 16px; padding-left: 12px; border-left: 4px solid var(--accent); }
+  h2.section .en { color: var(--muted); font-weight: 500; font-size: 15px; margin-left: 8px; }
+  .card {
+    background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 22px 24px; margin-bottom: 16px; box-shadow: 0 1px 3px rgba(30, 40, 90, .05);
+  }
+  .card h3 { font-size: 16.5px; margin-bottom: 10px; }
+  .card h3 .num {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 26px; height: 26px; border-radius: 50%;
+    background: var(--accent-soft); color: var(--accent);
+    font-size: 14px; margin-right: 10px; vertical-align: middle;
+  }
+  .card p, .card li { font-size: 15px; }
+  .card ul { padding-left: 22px; margin: 8px 0; }
+  .en-block {
+    margin-top: 10px; padding: 10px 14px; background: var(--en-soft);
+    border-left: 3px solid var(--en); border-radius: 6px; color: #14532d;
+    font-size: 14px; font-family: Georgia, "Times New Roman", serif;
+  }
+  mark { background: #fff3c4; padding: 0 4px; border-radius: 4px; }
+  .formula { font-family: "SF Mono", Consolas, monospace; background: #f1f3f9; padding: 1px 7px; border-radius: 5px; font-size: 14px; }
+  .code-block {
+    font-family: "SF Mono", Consolas, monospace; background: #1f2430; color: #e6e9f2;
+    border-radius: 10px; padding: 16px 18px; margin: 12px 0;
+    font-size: 13.5px; line-height: 1.85; overflow-x: auto; white-space: pre;
+  }
+  .code-block .c { color: #8a93a8; }
+  .code-block .hl { color: #ffd75e; font-weight: 700; }
+  .code-block .bad { color: #ff8080; }
+  .code-block .good { color: #7de8a8; }
+  .warn-block {
+    margin-top: 10px; padding: 10px 14px; background: #fdeaea;
+    border-left: 3px solid #c0392b; border-radius: 6px; color: #7a1f1f; font-size: 14px;
+  }
+  .fix-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin: 12px 0 4px; }
+  .fix-grid .f { border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; background: #f2f5ff; }
+  .fix-grid .f .num2 { font-weight: 700; color: var(--accent); font-size: 13px; margin-bottom: 4px; }
+  .fix-grid .f p { font-size: 13px; margin: 0; }
+  @media (max-width: 620px) { .fix-grid { grid-template-columns: 1fr; } }
+  .controls { display: flex; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; }
+  .controls button {
+    border: 1px solid var(--border); background: var(--card); padding: 7px 16px;
+    border-radius: 999px; font-size: 13.5px; cursor: pointer; color: var(--ink); transition: all .15s;
+  }
+  .controls button:hover { border-color: var(--accent); color: var(--accent); }
+  .controls button.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .glossary { display: grid; grid-template-columns: repeat(auto-fill, minmax(255px, 1fr)); gap: 12px; }
+  .term {
+    background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+    padding: 16px 18px; cursor: pointer; transition: transform .12s, box-shadow .12s; user-select: none;
+  }
+  .term:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(30,40,90,.08); }
+  .term .word { font-weight: 700; font-size: 15px; color: var(--accent); }
+  .term .zh { font-size: 14px; margin-top: 2px; }
+  .term .def { font-size: 13.5px; color: var(--muted); margin-top: 8px; border-top: 1px dashed var(--border); padding-top: 8px; }
+  .quiz-mode .term .def, .quiz-mode .term .zh { display: none; }
+  .quiz-mode .term.revealed .def, .quiz-mode .term.revealed .zh { display: block; }
+  .quiz-hint { font-size: 13px; color: var(--muted); margin-bottom: 12px; display: none; }
+  .quiz-mode-on .quiz-hint { display: block; }
+  footer { text-align: center; color: var(--muted); font-size: 12.5px; margin-top: 48px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="hero">
+    <div class="course">Andrew Ng · 深度学习专项课程 · Course 1 Week 2 Lesson 16</div>
+    <h1>关于 Python/Numpy 向量的说明</h1>
+    <div class="en-title">A Note on Python/Numpy Vectors (C1W2L16)</div>
+    <div style="margin-top:10px"><a href="https://www.youtube.com/watch?v=V2QlTmh6P2Y" target="_blank">▶ 观看视频 Watch on YouTube</a></div>
+    <div class="note">🔓 拆解上一讲的伏笔:秩为 1 的数组到底哪里危险</div>
+  </header>
+
+  <h2 class="section">核心知识点 <span class="en">Key Points</span></h2>
+
+  <div class="card">
+    <h3><span class="num">1</span>广播的灵活性是把双刃剑 · Flexibility Is Double-Edged</h3>
+    <p>numpy 的广播和灵活形状规则让代码简洁,但也让<mark>很难察觉的 bug</mark>容易混进代码——这是 L15 结尾留下的伏笔,今天拆解。</p>
+    <div class="en-block">The flexibility of numpy's broadcasting is both a strength (concise code) and a weakness (hard-to-catch bugs).</div>
+  </div>
+
+  <div class="card">
+    <h3><span class="num">2</span>元凶:秩为 1 的数组 · The Culprit: Rank 1 Arrays</h3>
+    <div class="code-block">a = np.random.randn(5)
+a.shape   <span class="c"># 输出 (5,) —— 不是 (5,1),也不是 (1,5)</span></div>
+    <p>这种形状叫<mark>秩为 1 的数组 (rank 1 array)</mark>——既不是行向量也不是列向量。<b>a 和它的转置 a.T 看起来一模一样</b>,这是最容易埋雷的地方。</p>
+    <div class="en-block">a = np.random.randn(5) gives shape (5,) — neither a row nor column vector. a and a.T look identical when printed, which is exactly where bugs hide.</div>
+  </div>
+
+  <div class="card">
+    <h3><span class="num">3</span>秩为 1 数组引发的诡异 bug · The Weird Bug</h3>
+    <div class="code-block">np.dot(a, a.T)   <span class="c"># 期望得到一个矩阵……</span>
+                 <span class="bad"># 实际得到:一个数(标量)!</span></div>
+    <p>原因:(5,) 转置后还是 (5,),numpy 不会把它当真正的行/列向量做矩阵乘法,退化成普通点积。</p>
+    <div class="warn-block">⚠️ 这类 bug <b>既不报错也不崩溃</b>,只是默默给出错误的形状/数值,调试起来非常痛苦。</div>
+    <div class="en-block">With a rank 1 array, np.dot(a, a.T) unexpectedly returns a number instead of a matrix. Such bugs don't crash — they silently produce wrong results.</div>
+  </div>
+
+  <div class="card">
+    <h3><span class="num">4</span>三个解决办法 · Three Fixes ⭐</h3>
+    <div class="fix-grid">
+      <div class="f"><div class="num2">① 明确指定形状</div><p>用 randn(5,1) 或 randn(1,5),不用 randn(5)</p></div>
+      <div class="f"><div class="num2">② 用 assert 检查</div><p>assert(a.shape == (5,1))<br>低成本 + 当文档用</p></div>
+      <div class="f"><div class="num2">③ 用 reshape 纠正</div><p>a = a.reshape(5,1)<br>开销很低</p></div>
+    </div>
+    <div class="code-block"><span class="bad">✗ a = np.random.randn(5)</span>         <span class="c"># 秩 1 数组,避免</span>
+<span class="good">✓ a = np.random.randn(5, 1)</span>      <span class="c"># 明确列向量</span>
+<span class="good">✓ a = np.random.randn(1, 5)</span>      <span class="c"># 明确行向量</span>
+<span class="good">✓ assert(a.shape == (5, 1))</span>      <span class="c"># 断言检查</span>
+<span class="good">✓ a = a.reshape(5, 1)</span>            <span class="c"># 需要时纠正形状</span></div>
+    <div class="en-block">Avoid rank 1 arrays — always specify (n,1) or (1,n). Use assert to document and catch shape mistakes. Use reshape to fix a rank 1 array if you end up with one; reshape is cheap.</div>
+  </div>
+
+  <h2 class="section">名词卡片 <span class="en">Glossary · 点击「自测模式」可当抽认卡用</span></h2>
+
+  <div class="controls">
+    <button id="btnStudy" class="active" onclick="setMode(false)">📖 学习模式</button>
+    <button id="btnQuiz" onclick="setMode(true)">🎯 自测模式</button>
+  </div>
+  <p class="quiz-hint">自测模式:先回忆中文含义,再点击卡片查看答案。</p>
+
+  <div class="glossary" id="glossary">
+    <div class="term"><div class="word">Rank 1 Array</div><div class="zh">秩为 1 的数组</div><div class="def">形状如 (n,) 的一维数组,非行非列,行为不直观</div></div>
+    <div class="term"><div class="word">a.shape</div><div class="zh">形状属性</div><div class="def">查看 numpy 数组维度的方式</div></div>
+    <div class="term"><div class="word">np.random.randn(n)</div><div class="zh">随机秩 1 数组</div><div class="def">容易埋雷的写法,应避免</div></div>
+    <div class="term"><div class="word">np.random.randn(n, 1)</div><div class="zh">随机列向量</div><div class="def">明确形状的写法(推荐)</div></div>
+    <div class="term"><div class="word">a.T (Transpose)</div><div class="zh">转置</div><div class="def">秩 1 数组转置后形状不变,是 bug 高发点</div></div>
+    <div class="term"><div class="word">assert</div><div class="zh">断言</div><div class="def">检查变量形状是否符合预期,出错立即报错</div></div>
+    <div class="term"><div class="word">.reshape(...)</div><div class="zh">重塑形状</div><div class="def">把数组显式转换成期望的形状,开销很低</div></div>
+    <div class="term"><div class="word">Silent Bug</div><div class="zh">静默 bug</div><div class="def">不报错也不崩溃,只是悄悄算错的错误类型</div></div>
+  </div>
+
+  <footer>C1W2L16 复习笔记 · 中英双语版</footer>
+</div>
+
+<script>
+  const glossary = document.getElementById('glossary');
+  const body = document.body;
+  function setMode(quiz) {
+    glossary.classList.toggle('quiz-mode', quiz);
+    body.classList.toggle('quiz-mode-on', quiz);
+    document.getElementById('btnQuiz').classList.toggle('active', quiz);
+    document.getElementById('btnStudy').classList.toggle('active', !quiz);
+    document.querySelectorAll('.term').forEach(t => t.classList.remove('revealed'));
+  }
+  document.querySelectorAll('.term').forEach(t => {
+    t.addEventListener('click', () => {
+      if (glossary.classList.contains('quiz-mode')) t.classList.toggle('revealed');
+    });
+  });
+</script>
+</body>
+</html>

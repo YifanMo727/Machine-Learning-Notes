@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>C1W2L12 · 更多向量化例子 | More Vectorization Examples</title>
+<style>
+  :root {
+    --bg: #f6f7fb; --card: #ffffff; --ink: #1f2430; --muted: #6b7280;
+    --accent: #4f6df5; --accent-soft: #eef1fe;
+    --en: #0e9f6e; --en-soft: #e7f7f1;
+    --border: #e5e8f0; --radius: 14px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", -apple-system, "Segoe UI", sans-serif;
+    background: var(--bg); color: var(--ink); line-height: 1.75; padding: 32px 16px 64px;
+  }
+  .wrap { max-width: 860px; margin: 0 auto; }
+  header.hero {
+    background: linear-gradient(135deg, #4f6df5 0%, #7c5cf0 100%);
+    color: #fff; border-radius: var(--radius); padding: 36px 32px; margin-bottom: 28px;
+  }
+  .hero .course { font-size: 13px; opacity: .85; letter-spacing: .5px; margin-bottom: 8px; }
+  .hero h1 { font-size: 28px; line-height: 1.35; }
+  .hero .en-title { font-size: 17px; font-weight: 400; opacity: .9; margin-top: 6px; }
+  .hero a { color: #dbe3ff; font-size: 13px; }
+  h2.section { font-size: 20px; margin: 36px 0 16px; padding-left: 12px; border-left: 4px solid var(--accent); }
+  h2.section .en { color: var(--muted); font-weight: 500; font-size: 15px; margin-left: 8px; }
+  .card {
+    background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 22px 24px; margin-bottom: 16px; box-shadow: 0 1px 3px rgba(30, 40, 90, .05);
+  }
+  .card h3 { font-size: 16.5px; margin-bottom: 10px; }
+  .card h3 .num {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 26px; height: 26px; border-radius: 50%;
+    background: var(--accent-soft); color: var(--accent);
+    font-size: 14px; margin-right: 10px; vertical-align: middle;
+  }
+  .card p, .card li { font-size: 15px; }
+  .card ul { padding-left: 22px; margin: 8px 0; }
+  .en-block {
+    margin-top: 10px; padding: 10px 14px; background: var(--en-soft);
+    border-left: 3px solid var(--en); border-radius: 6px; color: #14532d;
+    font-size: 14px; font-family: Georgia, "Times New Roman", serif;
+  }
+  mark { background: #fff3c4; padding: 0 4px; border-radius: 4px; }
+  .formula { font-family: "SF Mono", Consolas, monospace; background: #f1f3f9; padding: 1px 7px; border-radius: 5px; font-size: 14px; }
+  .code-block {
+    font-family: "SF Mono", Consolas, monospace; background: #1f2430; color: #e6e9f2;
+    border-radius: 10px; padding: 16px 18px; margin: 12px 0;
+    font-size: 13.5px; line-height: 1.8; overflow-x: auto; white-space: pre;
+  }
+  .code-block .c { color: #8a93a8; }
+  .code-block .k { color: #7cc4ff; }
+  .code-block .hl { color: #ffd75e; font-weight: 700; }
+  table.d { width: 100%; border-collapse: collapse; font-size: 14px; margin: 12px 0 4px; }
+  table.d th, table.d td { border: 1px solid var(--border); padding: 8px 12px; text-align: center; }
+  table.d th { background: var(--accent-soft); color: #3b4fc0; font-size: 13px; }
+  table.d td.f { font-family: "SF Mono", Consolas, monospace; }
+  .controls { display: flex; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; }
+  .controls button {
+    border: 1px solid var(--border); background: var(--card); padding: 7px 16px;
+    border-radius: 999px; font-size: 13.5px; cursor: pointer; color: var(--ink); transition: all .15s;
+  }
+  .controls button:hover { border-color: var(--accent); color: var(--accent); }
+  .controls button.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .glossary { display: grid; grid-template-columns: repeat(auto-fill, minmax(255px, 1fr)); gap: 12px; }
+  .term {
+    background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+    padding: 16px 18px; cursor: pointer; transition: transform .12s, box-shadow .12s; user-select: none;
+  }
+  .term:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(30,40,90,.08); }
+  .term .word { font-weight: 700; font-size: 15px; color: var(--accent); }
+  .term .zh { font-size: 14px; margin-top: 2px; }
+  .term .def { font-size: 13.5px; color: var(--muted); margin-top: 8px; border-top: 1px dashed var(--border); padding-top: 8px; }
+  .quiz-mode .term .def, .quiz-mode .term .zh { display: none; }
+  .quiz-mode .term.revealed .def, .quiz-mode .term.revealed .zh { display: block; }
+  .quiz-hint { font-size: 13px; color: var(--muted); margin-bottom: 12px; display: none; }
+  .quiz-mode-on .quiz-hint { display: block; }
+  footer { text-align: center; color: var(--muted); font-size: 12.5px; margin-top: 48px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="hero">
+    <div class="course">Andrew Ng · 深度学习专项课程 · Course 1 Week 2 Lesson 12</div>
+    <h1>更多向量化例子</h1>
+    <div class="en-title">More Vectorization Examples (C1W2L12)</div>
+    <div style="margin-top:10px"><a href="https://www.youtube.com/watch?v=pYWASRauTzs" target="_blank">▶ 观看视频 Watch on YouTube</a></div>
+  </header>
+
+  <h2 class="section">核心知识点 <span class="en">Key Points</span></h2>
+
+  <div class="card">
+    <h3><span class="num">1</span>指导原则(重申)· The Guideline</h3>
+    <p>神经网络编程守则:<mark>只要有可能,就避免显式 for 循环</mark>。本讲给出更多"循环 → numpy 一行"的改写范例。</p>
+    <div class="en-block">The neural network programming guideline: whenever possible, avoid explicit for loops.</div>
+  </div>
+
+  <div class="card">
+    <h3><span class="num">2</span>例子一:矩阵乘向量 u = Av · Matrix × Vector</h3>
+    <div class="code-block"><span class="c"># 非向量化:两层循环</span>
+u = np.zeros((n, 1))
+<span class="k">for</span> i <span class="k">in</span> range(n):
+    <span class="k">for</span> j <span class="k">in</span> range(m):
+        u[i] += A[i][j] * v[j]
+
+<span class="c"># 向量化:一行</span>
+<span class="hl">u = np.dot(A, v)</span></div>
+    <div class="en-block">Matrix-vector multiplication u = Av needs a double loop by hand; np.dot(A, v) does it in one line.</div>
+  </div>
+
+  <div class="card">
+    <h3><span class="num">3</span>例子二:逐元素运算 · Elementwise Operations</h3>
+    <p>需求:对向量 v 的<b>每个元素</b>求 e^(vᵢ):</p>
+    <div class="code-block"><span class="c"># 非向量化</span>
+u = np.zeros((n, 1))
+<span class="k">for</span> i <span class="k">in</span> range(n):
+    u[i] = math.exp(v[i])
+
+<span class="c"># 向量化</span>
+<span class="hl">u = np.exp(v)</span></div>
+    <p>numpy 的逐元素函数一族:</p>
+    <table class="d">
+      <tr><th>写法</th><th>作用</th></tr>
+      <tr><td class="f">np.exp(v)</td><td>每个元素求指数</td></tr>
+      <tr><td class="f">np.log(v)</td><td>每个元素求对数</td></tr>
+      <tr><td class="f">np.abs(v)</td><td>每个元素求绝对值</td></tr>
+      <tr><td class="f">np.maximum(v, 0)</td><td>每个元素与 0 取大者(就是 <mark>ReLU</mark>!)</td></tr>
+      <tr><td class="f">v**2&nbsp;&nbsp;/&nbsp;&nbsp;1/v</td><td>每个元素平方 / 取倒数</td></tr>
+    </table>
+    <div class="en-block">numpy offers a whole family of elementwise functions — np.exp, np.log, np.abs, np.maximum(v, 0) (that's ReLU!), v**2, 1/v.</div>
+  </div>
+
+  <div class="card">
+    <h3><span class="num">4</span>用到逻辑回归:先消内层循环 · Kill the Inner Loop ⭐</h3>
+    <p>L10 的算法有两层循环,本讲先消<b>内层</b>(遍历 n 个特征):把 dw1, dw2, … 合并成<mark>一个向量 dw</mark>:</p>
+    <div class="code-block">dw = np.zeros((n_x, 1))          <span class="c"># 初始化为向量</span>
+
+<span class="k">for</span> i <span class="k">in</span> range(m):               <span class="c"># 外层循环暂时保留</span>
+    z(i) = np.dot(w.T, x(i)) + b
+    a(i) = σ(z(i))
+    dz(i) = a(i) − y(i)
+    <span class="hl">dw += x(i) * dz(i)</span>           <span class="c"># ⭐ 一行替代 dw1+=…, dw2+=…, …</span>
+    db += dz(i)
+
+dw /= m; db /= m</div>
+    <p><span class="formula">dw += x(i)·dz(i)</span> 是向量整体乘标量,一行完成全部特征的累加。<mark>进度:两层循环 → 一层循环</mark>,剩下的样本循环下一讲消灭。</p>
+    <div class="en-block">Treat dw as a vector: dw += x(i)·dz(i) replaces the whole inner loop over features. Two loops → one loop; the outer loop over examples dies next lecture.</div>
+  </div>
+
+  <h2 class="section">名词卡片 <span class="en">Glossary · 点击「自测模式」可当抽认卡用</span></h2>
+
+  <div class="controls">
+    <button id="btnStudy" class="active" onclick="setMode(false)">📖 学习模式</button>
+    <button id="btnQuiz" onclick="setMode(true)">🎯 自测模式</button>
+  </div>
+  <p class="quiz-hint">自测模式:先回忆中文含义,再点击卡片查看答案。</p>
+
+  <div class="glossary" id="glossary">
+    <div class="term"><div class="word">Matrix × Vector (u = Av)</div><div class="zh">矩阵乘向量</div><div class="def">uᵢ = Σⱼ Aᵢⱼvⱼ;np.dot(A, v) 一行完成</div></div>
+    <div class="term"><div class="word">Elementwise Operation</div><div class="zh">逐元素运算</div><div class="def">对向量每个元素独立做同一运算</div></div>
+    <div class="term"><div class="word">np.exp / np.log / np.abs</div><div class="zh">逐元素函数</div><div class="def">指数 / 对数 / 绝对值,整个向量一次算完</div></div>
+    <div class="term"><div class="word">np.maximum(v, 0)</div><div class="zh">逐元素取最大</div><div class="def">每个元素与 0 比大小取大者,即 ReLU</div></div>
+    <div class="term"><div class="word">v**2, 1/v</div><div class="zh">逐元素平方 / 倒数</div><div class="def">numpy 对整个向量的简写运算</div></div>
+    <div class="term"><div class="word">dw (as a vector)</div><div class="zh">梯度向量</div><div class="def">把 dw1…dwₙ 合并成 n_x 维向量统一累加</div></div>
+    <div class="term"><div class="word">Inner / Outer Loop</div><div class="zh">内层 / 外层循环</div><div class="def">特征循环(本讲消灭)/ 样本循环(下讲消灭)</div></div>
+  </div>
+
+  <footer>C1W2L12 复习笔记 · 中英双语版</footer>
+</div>
+
+<script>
+  const glossary = document.getElementById('glossary');
+  const body = document.body;
+  function setMode(quiz) {
+    glossary.classList.toggle('quiz-mode', quiz);
+    body.classList.toggle('quiz-mode-on', quiz);
+    document.getElementById('btnQuiz').classList.toggle('active', quiz);
+    document.getElementById('btnStudy').classList.toggle('active', !quiz);
+    document.querySelectorAll('.term').forEach(t => t.classList.remove('revealed'));
+  }
+  document.querySelectorAll('.term').forEach(t => {
+    t.addEventListener('click', () => {
+      if (glossary.classList.contains('quiz-mode')) t.classList.toggle('revealed');
+    });
+  });
+</script>
+</body>
+</html>
